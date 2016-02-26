@@ -1,0 +1,12 @@
+{
+    "dev": {
+        "driver": "pg",
+        "user": "serapis",
+        "password": "reallysecure",
+        "host": "localhost",
+        "database": "serapis_dev",
+        "schema": "serapis_schema"
+    },
+
+    "sql-file" : true
+}
