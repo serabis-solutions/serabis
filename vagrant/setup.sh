@@ -11,12 +11,7 @@ echo 'deb-src https://deb.nodesource.com/node_5.x jessie main' | sudo tee -a /et
 sudo apt-get update
 
 sudo apt-get install -y postgresql-9.4 postgresql-server-dev-9.4 build-essential nodejs
-
-#setup the db
-#if [[ ! $(sudo -u postgres psql -t -c "SELECT datname FROM pg_database WHERE datname = 'challenge'") ]]; then 
-#    sudo -u postgres psql -c "CREATE USER challenger WITH PASSWORD 'reallysecure';"
-#    sudo -u postgres createdb challenge -O challenger
-#
-#    #do this as the challenger user so that the ownership is correct, and to test the user is setup correct
-#    PGPASSWORD='reallysecure' psql -U challenger -h localhost challenge < /vagrant/sql/create.sql
-#fi
+if [[ ! $(sudo -u postgres psql -t -c "SELECT datname FROM pg_database WHERE datname = 'serapis_dev'") ]]; then 
+    sudo -u postgres psql -c "CREATE USER serapis WITH PASSWORD 'reallysecure';"
+    sudo -u postgres createdb serapis_dev -O serapis
+fi
