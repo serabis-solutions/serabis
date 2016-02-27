@@ -12,6 +12,13 @@ module.exports = function (router) {
             items = [items];
         }
 
-        res.json(db.saveDataPoints(items, req.params.agentId));
+        db.saveDataPoints(items, req.params.agentId)
+            .then(function() {
+                res.json({ dataPointsSaved: items.length } );
+            })
+            .catch(function(err) {
+                console.log(err);
+                res.json ({ err: { code: 1001, msg: 'Failed to save data points'}});
+            });
     });
 };

@@ -3,9 +3,16 @@ var config;
 
 class Database {
     constructor() {
-        this.pg = require('pg').native;
-        this.db = new this.pg.Client('postgres://serapis:reallysecure@localhost:5432/serapis_dev');
-        this.db.connect();
+        var pgp = require('pg-promise')({});
+        this.db = pgp({
+            host: 'localhost',
+            port: 5432,
+            database: 'serapis_dev',
+            user: 'serapis',
+            password: 'reallysecure',
+        });
+        
+        //'postgres://serapis:reallysecure@localhost:5432/serapis_dev');
 
         if( true || config.debug ) {
             console.log('Connecting to Database');
@@ -33,8 +40,8 @@ class Database {
     }
 
     saveDataPoints(dataPoints, agentId) {
-        var q = this.db.query(this._buildDataPointsQuery(dataPoints, agentId) );
-        return { dataPointsSaved: dataPoints.length };
+        var q = this._buildDataPointsQuery(dataPoints, agentId);
+        return this.db.none(q.text, q.values );
     }
 }
 
