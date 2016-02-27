@@ -16,7 +16,8 @@
     "db-migrate-pg": "^0.1.9",
     "eslint": "^1.10.3",
     "express": "^4.12.2",
-    "kraken-js": "^1.0.3"
+    "kraken-js": "^1.0.3",
+    "pg-native": "^1.10.0"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
