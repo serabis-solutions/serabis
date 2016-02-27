@@ -17,6 +17,8 @@
     "eslint": "^1.10.3",
     "express": "^4.12.2",
     "kraken-js": "^1.0.3",
+    "md5": "^2.0.0",
+    "node-uuid": "^1.4.7",
     "pg-native": "^1.10.0",
     "pg-promise": "^3.2.3"
   },

@@ -43,6 +43,16 @@ class Database {
         var q = this._buildDataPointsQuery(dataPoints, agentId);
         return this.db.none(q.text, q.values );
     }
+
+    addAgent(details) {
+        return this.db.none(
+            'INSERT INTO agents (key, hostname, shortname) VALUES ($1, $2, $3)',
+            [
+                details['key'],
+                details['hostname'],
+                details['shortname']
+            ]);
+    }
 }
 
 module.exports.init = function(modelConfig) {
