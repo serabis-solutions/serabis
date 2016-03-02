@@ -1,7 +1,11 @@
 use std::process::Command;
 use std::thread;
-use std::thread::JoinHandle;
 use std::time::Duration;
+
+extern crate toml_loader;
+use toml_loader::Loader;
+use toml_loader::LoadError;
+use std::path::Path;
 
 struct Worker {
     command : String,
@@ -20,20 +24,34 @@ impl Worker {
         println!("command is '{}'", self.command);
         println!("args are {:?}", self.args);
 
-        thread::sleep(Duration::from_millis(1000));
+        loop {
 
-//      https://stackoverflow.com/questions/26550962/how-would-you-stream-output-from-a-process-in-rust
-        let output = Command::new( &self.command )
-            .args( &self.args )
-            .output()
-            .unwrap_or_else(|e| { panic!("failed to execute process: {}", e) });
-
-        let encoded = String::from_utf8( output.stdout ).unwrap();
-        print!("{}", encoded);
+            thread::sleep(Duration::from_millis(10000));
+//
+//    //      https://stackoverflow.com/questions/26550962/how-would-you-stream-output-from-a-process-in-rust
+//            let output = Command::new( &self.command )
+//                .args( &self.args )
+//                .output()
+//                .unwrap_or_else(|e| { panic!("failed to execute process: {}", e) });
+//
+//            let encoded = String::from_utf8( output.stdout ).unwrap();
+//            print!("{}", encoded);
+        };
     }
 }
 
 fn main() {
+    let config_file = Path::new( "/etc/serapis/monitor.toml" );
+
+    // XXX this is terrible, but it works and i'll learn how to improve it somewhere along the line
+    // XXX handle the Io error better, probably with a default config
+    let config = match Loader::from_file( &config_file ) {
+        Ok(s) => { s },
+        Err(LoadError::Parse(e)) => panic!("failed to parse config, {}", e[0]),
+        Err(LoadError::Io(e)) => panic!("failed to open config file {}, {}", &config_file.to_str().unwrap(), e.to_string()),
+    };
+    println!( "{}", &config );
+
     let workers = vec![
         Worker::new( "echo", vec!["foo", "bar"]),
         Worker::new( "echo", vec!["foo", "bar"]),
@@ -51,13 +69,4 @@ fn main() {
     for h in handles {
         h.join().unwrap();
     }
-
-//    for x in 0..10_000 {
-//        thread::spawn(move || {
-//              thread::sleep( Duration::new(60, 0));
-//              print!("{} ", command);
-//        });
-//
-//    }
-//   child.join();
 }

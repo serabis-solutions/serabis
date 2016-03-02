@@ -1,6 +1,7 @@
 [package]
-name = "rs-monitor"
+name = "serapis-monitor"
 version = "0.1.0"
 authors = ["Mark Ellis <m@rkellis.com>"]
 
 [dependencies]
+toml-loader = "0.1"
