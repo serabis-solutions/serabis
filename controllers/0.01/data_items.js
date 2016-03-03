@@ -21,4 +21,20 @@ module.exports = function (router) {
                 res.json ({ err: { code: 1001, msg: 'Failed to save data points'}});
             });
     });
+
+    router.get('/:agentKey/:type', function(req, res) {
+        db.getDataPoints(
+            req.params.agentKey, 
+            req.params.type,
+            req.params.start,
+            req.params.end
+        )
+        .then(function(data) {
+            res.json({data: data});
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.json({err: { code: 1002, msg: 'Failed to load data points'}});
+        });
+    });
 };
