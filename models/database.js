@@ -53,6 +53,24 @@ class Database {
                 details['shortname']
             ]);
     }
+
+    getDataPoints(agentKey, type, start, end) {
+        if(start === 'undefined') {
+            start = 0;
+        }
+        if(end === 'undefined') {
+            end === 253402214400; //31/12/9999 #Bigger than 32 bit timestamp
+        }
+
+        return this.db.manyOrNone(
+            'SELECT data FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND data->>\'timestamp\' BETWEEN $3 AND $4 ORDER BY data->>\'timestamp\' LIMIT 1000',
+            [
+                agentKey,
+                type,
+                start,
+                end
+            ]);
+    }
 }
 
 module.exports.init = function(modelConfig) {
