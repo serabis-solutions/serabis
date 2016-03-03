@@ -5,6 +5,8 @@ use std::time::Duration;
 extern crate toml_loader;
 use toml_loader::Loader;
 use toml_loader::LoadError;
+extern crate toml;
+
 use std::path::Path;
 
 struct Worker {
@@ -40,6 +42,17 @@ impl Worker {
     }
 }
 
+macro_rules! exit {
+    ($fmt:expr) => ({
+        println!( $fmt );
+        std::process::exit(1);
+    });
+    ($fmt:expr, $($arg:tt)+) => ({
+        println!( $fmt, $($arg)+ );
+        std::process::exit(1);
+    });
+}
+
 fn main() {
     let config_file = Path::new( "/etc/serapis/monitor.toml" );
 
@@ -47,10 +60,15 @@ fn main() {
     // XXX handle the Io error better, probably with a default config
     let config = match Loader::from_file( &config_file ) {
         Ok(s) => { s },
-        Err(LoadError::Parse(e)) => panic!("failed to parse config, {}", e[0]),
-        Err(LoadError::Io(e)) => panic!("failed to open config file {}, {}", &config_file.to_str().unwrap(), e.to_string()),
+        Err(LoadError::Parse(e)) => exit!("failed to parse config, {}", e[0]),
+        Err(LoadError::Io(e)) => exit!("failed to open config file {}, {}", &config_file.to_str().unwrap(), e.to_string()),
     };
-    println!( "{}", &config );
+    let default = String::from("Hello, world!");
+    let something = match config.lookup("something") {
+        Some(&toml::Value::String(ref s)) => s,
+        _ => &default,
+    };
+    println!( "{:?}", something );
 
     let workers = vec![
         Worker::new( "echo", vec!["foo", "bar"]),
