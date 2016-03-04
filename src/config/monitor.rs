@@ -33,7 +33,7 @@ impl Monitor {
 
         let mut file = match File::open(path) {
             Ok(file) => file,
-            Err(_)  => {
+            Err(_)   => {
                 warn!("Could not find config file, using default!");
                 return Monitor::new();
             }
@@ -56,15 +56,7 @@ impl Monitor {
         }
 
         let config = Value::Table( toml.unwrap() );
-die!();
-        let monitor = toml::decode(config);//.or_else( || die!( "invalid config" ) );
-  //          unwrap_or;
-        if monitor.is_none() {
-            die!("invalid config, using default")
-        }
-        else {
-            monitor.unwrap()
-        }
+        toml::decode(config).unwrap_or_else( || die!("invalid config") )
     }
 }
 
