@@ -1,13 +1,12 @@
-use std::process::Command;
+extern crate rustc_serialize;
+extern crate toml;
+#[macro_use] extern crate log;
+
+mod config;
+
+//use std::process::Command;
 use std::thread;
 use std::time::Duration;
-
-extern crate toml_loader;
-use toml_loader::Loader;
-use toml_loader::LoadError;
-extern crate toml;
-
-use std::path::Path;
 
 struct Worker {
     command : String,
@@ -54,21 +53,10 @@ macro_rules! exit {
 }
 
 fn main() {
-    let config_file = Path::new( "/etc/serapis/monitor.toml" );
+warn!("here");
+    let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
 
-    // XXX this is terrible, but it works and i'll learn how to improve it somewhere along the line
-    // XXX handle the Io error better, probably with a default config
-    let config = match Loader::from_file( &config_file ) {
-        Ok(s) => { s },
-        Err(LoadError::Parse(e)) => exit!("failed to parse config, {}", e[0]),
-        Err(LoadError::Io(e)) => exit!("failed to open config file {}, {}", &config_file.to_str().unwrap(), e.to_string()),
-    };
-    let default = String::from("Hello, world!");
-    let something = match config.lookup("something") {
-        Some(&toml::Value::String(ref s)) => s,
-        _ => &default,
-    };
-    println!( "{:?}", something );
+    println!( "{:?}", m );
 
     let workers = vec![
         Worker::new( "echo", vec!["foo", "bar"]),
