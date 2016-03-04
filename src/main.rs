@@ -1,6 +1,11 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
+#[macro_use] extern crate log;
+#[macro_use] mod macros;
+
 extern crate rustc_serialize;
 extern crate toml;
-#[macro_use] extern crate log;
 
 mod config;
 
@@ -41,19 +46,8 @@ impl Worker {
     }
 }
 
-macro_rules! exit {
-    ($fmt:expr) => ({
-        println!( $fmt );
-        std::process::exit(1);
-    });
-    ($fmt:expr, $($arg:tt)+) => ({
-        println!( $fmt, $($arg)+ );
-        std::process::exit(1);
-    });
-}
 
 fn main() {
-warn!("here");
     let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
 
     println!( "{:?}", m );

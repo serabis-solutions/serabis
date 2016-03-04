@@ -5,6 +5,6 @@ authors = ["Mark Ellis <m@rkellis.com>"]
 
 [dependencies]
 toml = "0.1"
-toml-loader = "0.1"
 log = "0.3"
 rustc-serialize = "0.3"
+clippy = "0.0"

@@ -2,6 +2,7 @@
 
 use std::fs::File;
 use std::io::prelude::*;
+#[allow(unused_imports)]
 use toml::{Parser, Value, Decoder};
 use toml;
 
@@ -53,19 +54,24 @@ impl Monitor {
             }
             panic!("Exiting server");
         }
-println!("{:?}", toml );
-// XXX why wont exit! work here?
-        let config = Value::Table( toml.unwrap() );
 
-        toml::decode(config).unwrap()
-//r_else( || panic!( "invalid config," ) )
+        let config = Value::Table( toml.unwrap() );
+die!();
+        let monitor = toml::decode(config);//.or_else( || die!( "invalid config" ) );
+  //          unwrap_or;
+        if monitor.is_none() {
+            die!("invalid config, using default")
+        }
+        else {
+            monitor.unwrap()
+        }
     }
 }
 
 impl Something {
     pub fn new() -> Something {
         Something {
-            foo : "DEFAULT VAKUE".to_string(),
+            foo : "DEFAULT VAKUE".to_owned(),
         }
     }
 }
