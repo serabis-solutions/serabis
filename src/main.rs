@@ -6,16 +6,20 @@
 
 extern crate rustc_serialize;
 extern crate toml;
+extern crate hyper;
 
 mod config;
 mod worker;
 use worker::Worker;
+
+mod server;
 
 use std::thread;
 
 fn main() {
     let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
 
+    let server = server::Server::new();
     println!( "{:?}", m );
 
     let workers = vec![
