@@ -26,8 +26,8 @@ module.exports = function (router) {
         db.getDataPoints(
             req.params.agentKey, 
             req.params.type,
-            req.params.start,
-            req.params.end
+            req.body.start,
+            req.body.end
         )
         .then(function(data) {
             res.json({data: data});

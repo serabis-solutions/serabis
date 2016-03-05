@@ -11,7 +11,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.hostmanager.enabled = true
     config.hostmanager.manage_host = true
     config.vm.network "private_network", ip: "192.168.55.21"
-    
+    config.vm.synced_folder "../", "/mnt/stuff"
+
     config.vm.provision "shell",
         path: "vagrant/setup.sh",
         privileged: false
