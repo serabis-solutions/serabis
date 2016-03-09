@@ -8,33 +8,28 @@ extern crate rustc_serialize;
 extern crate toml;
 extern crate hyper;
 
-mod config;
-mod worker;
-mod server;
+//mod config;
+mod plugin;
+//mod server;
 
-use worker::Worker;
 use std::sync::Arc;
 use std::thread;
+use std::path::Path;
 
 fn main() {
+    let plugin_path = Path::new("/etc/serapis/plugins");
+    let plugins = plugin::find_plugins( &plugin_path );
+
+//    let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
+
+//    let server = server::Server::new();
+
     let client = Arc::new( hyper::Client::new() );
 
-    let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
-
-    let server = server::Server::new();
-    println!( "{:?}", m );
-
-    let workers = vec![
-        Worker::new( "1", vec!["foo", "bar"], client.clone() ),
-        Worker::new( "2", vec!["foo", "bar"], client.clone() ),
-        Worker::new( "3", vec!["foo", "bar"], client.clone() ),
-        Worker::new( "4", vec!["foo", "bar"], client.clone() ),
-        Worker::new( "5", vec!["foo", "bar"], client.clone() ),
-    ];
-
-    let handles: Vec<_> = workers.into_iter().map(|p| {
+    let handles: Vec<_> = plugins.into_iter().map(|p| {
+        let client = client.clone();
         thread::spawn(move || {
-            p.start();
+            p.run( client );
         })
     }).collect();
 
