@@ -39,21 +39,43 @@ class Database {
         } 
     }
 
-    saveDataPoints(dataPoints, agentId) {
-        var q = this._buildDataPointsQuery(dataPoints, agentId);
-        return this.db.none(q.text, q.values );
+    saveDataPoints(dataPoints, accountKey, agentKey) {
+        var model = this;
+
+        return this.db.one(
+            'SELECT * FROM agents WHERE key = $1 AND account_key = $2',
+            [ agentKey, accountKey ])
+        .then(function(data) {
+            var q = model._buildDataPointsQuery(dataPoints, agentKey);
+            return model.db.none(q.text, q.values );
+        })
+        .catch(function(err) {
+            return {error: "Unable to validate agent_key and/or account_key"};
+        });
     }
 
     addAgent(details) {
         return this.db.none(
-            'INSERT INTO agents (key, hostname, shortname) VALUES ($1, $2, $3)',
+            'INSERT INTO agents (key, hostname, shortname, account_key) VALUES ($1, $2, $3, $4)',
             [
                 details['key'],
                 details['hostname'],
+                details['shortname'],
+                details['account_key']
+            ]);
+    }
+
+    addAccount(details) {
+        return this.db.none(
+            'INSERT INTO accounts (key, name, shortname) VALUES ($1, $2, $3)',
+            [
+                details['key'],
+                details['name'],
                 details['shortname']
             ]);
     }
 
+ 
     getDataPoints(agentKey, type, start, end) {
         if(start === undefined) {
             start = '0';
