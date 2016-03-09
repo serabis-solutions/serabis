@@ -40,9 +40,18 @@ class Database {
     }
 
     saveDataPoints(dataPoints, accountKey, agentKey) {
-        //TODO: Validate the account key
-        var q = this._buildDataPointsQuery(dataPoints, agentKey);
-        return this.db.none(q.text, q.values );
+        var model = this;
+
+        return this.db.one(
+            'SELECT * FROM agents WHERE key = $1 AND account_key = $2',
+            [ agentKey, accountKey ])
+        .then(function(data) {
+            var q = model._buildDataPointsQuery(dataPoints, agentKey);
+            return model.db.none(q.text, q.values );
+        })
+        .catch(function(err) {
+            return {error: "Unable to validate agent_key and/or account_key"};
+        });
     }
 
     addAgent(details) {

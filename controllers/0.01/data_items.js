@@ -13,8 +13,12 @@ module.exports = function (router) {
         }
 
         db.saveDataPoints(items, req.params.accountKey, req.params.agentKey)
-            .then(function() {
-                res.json({ dataPointsSaved: items.length } );
+            .then(function(result) {
+                if(result != undefined && result['error']) {
+                    res.json ({ err: { code: 1003, msg: result['error'] }});
+                } else {
+                    res.json({ dataPointsSaved: items.length } );
+                }
             })
             .catch(function(err) {
                 console.log(err);
