@@ -39,21 +39,34 @@ class Database {
         } 
     }
 
-    saveDataPoints(dataPoints, agentId) {
-        var q = this._buildDataPointsQuery(dataPoints, agentId);
+    saveDataPoints(dataPoints, accountKey, agentKey) {
+        //TODO: Validate the account key
+        var q = this._buildDataPointsQuery(dataPoints, agentKey);
         return this.db.none(q.text, q.values );
     }
 
     addAgent(details) {
         return this.db.none(
-            'INSERT INTO agents (key, hostname, shortname) VALUES ($1, $2, $3)',
+            'INSERT INTO agents (key, hostname, shortname, account_key) VALUES ($1, $2, $3, $4)',
             [
                 details['key'],
                 details['hostname'],
+                details['shortname'],
+                details['account_key']
+            ]);
+    }
+
+    addAccount(details) {
+        return this.db.none(
+            'INSERT INTO accounts (key, name, shortname) VALUES ($1, $2, $3)',
+            [
+                details['key'],
+                details['name'],
                 details['shortname']
             ]);
     }
 
+ 
     getDataPoints(agentKey, type, start, end) {
         if(start === undefined) {
             start = '0';
