@@ -1,0 +1,16 @@
+#!/bin/sh
+
+data=()
+for interface in /sys/class/net/*; do 
+    rx_bytes=$(cat "$interface/statistics/rx_bytes")
+    tx_bytes=$(cat "$interface/statistics/tx_bytes")
+    interface="${interface##*/}"
+
+    data+=("$(printf '"%s": { "rx_bytes": %i, "tx_bytes": %i }' "$interface" $rx_bytes $tx_bytes)")
+done
+
+function join { local IFS="$1"; shift; echo -n "$*"; }
+
+echo -n '{'
+    join , "${data[@]}";
+echo '}'
