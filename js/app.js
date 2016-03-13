@@ -1,5 +1,5 @@
 (function() {
-    var app = angular.module('serapis', []);
+    var app = angular.module('serapis', ['chart.js']);
 
     app.directive('agentHeader', function() {
         return {
@@ -21,7 +21,26 @@
                     .then(function(res) {
                         console.log('MASSIVE SUCCESS!');
                         console.log(res.status);
-                        console.log(res.data);
+                        console.log(res.data.data);
+                        var data = res.data.data;
+                        var labels = [];
+                        var graph_data = [[], [], []];
+                        data.forEach(function(obj) {
+                            labels.push(new Date(obj.data.timestamp * 1000));
+                            graph_data[0].push(obj.data['1min']);
+                            graph_data[1].push(obj.data['5min']);
+                            graph_data[2].push(obj.data['15min']);
+                        });
+console.log(labels);
+console.log(graph_data);
+                        $scope.labels = labels;
+  $scope.series = ['1min', '5min', '15min'];
+  $scope.data = graph_data; 
+  $scope.onClick = function (points, evt) {
+    console.log(points, evt);
+  };
+
+
                     })
                     .catch(function(err) {
                         console.log('MASSIVE ERROR');
