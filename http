@@ -1,1 +1,0 @@
-plackup -MData::Dumper::Concise -e 'sub {my $env = shift; warn "$env->{REQUEST_METHOD} $env->{REQUEST_URI}\n"; $f = $env->{"psgi.input"}; warn <$f> . "\n\n"; [200, [], ["ok"]]}' --no-default-middleware
