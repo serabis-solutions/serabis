@@ -1,5 +1,12 @@
 # serapis-api
 
+## first run
+```
+cd /vagrant
+npm install
+db-migrate --config config/database.json -e dev up
+```
+
 ## Serapis API provider.
 
 ### Add a new account:
