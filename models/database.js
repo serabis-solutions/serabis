@@ -76,16 +76,53 @@ class Database {
     }
 
  
-    getDataPoints(agentKey, type, start, end) {
-        if(start === undefined) {
-            start = '0';
+    getAggregateDataPoints(agentKey, dataKey, type, start, end) {
+        start = Number(start);
+        end = Number(end);
+
+        if(isNaN(start)) {
+            start = 0;
         }
-        if(end === undefined) {
-            end = '253402214400'; //31/12/9999 #Bigger than 32 bit timestamp
+        if(isNaN(end)) {
+            end = Math.round(Date.now() / 1000);
         }
- 
+
+        dataKey = dataKey.replace(':', '->');
+
+        var periodLength = 60; //1 minute
+        if(end - start > 60*60*24*14) { //More than 2 weeks
+            periodLength = 60*60*24; // 1day
+        } else if (end - start > 60*60*24*48) { //More than 2 days
+            periodLength = 60*60; //1 hour
+        } else if (end - start > 60*60*12) { // More than 12 hours
+            periodLength = 60*5; //5 minutes
+        }
+
         return this.db.manyOrNone(
-            'SELECT data FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND data->>\'timestamp\' BETWEEN $3 AND $4 ORDER BY data->>\'timestamp\' LIMIT 1000',
+            'SELECT avg((data->>$5)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
+            [
+                agentKey,
+                type,
+                start,
+                end,
+                dataKey,
+                periodLength
+            ]);
+    }
+
+    getDataPoints(agentKey, type, start, end) {
+        start = Number(start);
+        end = Number(end);
+
+        if(isNaN(start)) {
+            start = 0;
+        }
+        if(isNaN(end)) {
+            end = Math.round(Date.now() / 1000);
+        }
+
+        return this.db.manyOrNone(
+            'SELECT data FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 ORDER BY data->>\'timestamp\' LIMIT 1000',
             [
                 agentKey,
                 type,
