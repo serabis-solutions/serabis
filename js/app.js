@@ -17,45 +17,45 @@
             restrict: 'E',
             templateUrl: 'ng-components/graphs/default.html',
             controller: function ($scope, $http){
-                $http.get('http://dev.serapis:8000/0.01/data_items/3fce4f1d-b74a-40fa-934f-9dd6c2717e6f/system.load')
-                    .then(function(res) {
-                        console.log('MASSIVE SUCCESS!');
-                        console.log(res.status);
-                        console.log(res.data.data);
-                        var data = res.data.data;
-                        var labels = [];
-                        var graph_data = [[], [], []];
-                        data.forEach(function(obj) {
-                            labels.push(new Date(obj.data.timestamp * 1000));
-                            graph_data[0].push(obj.data['1min']);
-                            graph_data[1].push(obj.data['5min']);
-                            graph_data[2].push(obj.data['15min']);
-                        });
-console.log(labels);
-console.log(graph_data);
-                        $scope.labels = labels;
-  $scope.series = ['1min', '5min', '15min'];
-  $scope.data = graph_data; 
-  $scope.onClick = function (points, evt) {
-    console.log(points, evt);
-  };
+                var start = Date.now() - (24 * 60 * 1000 * 60);
+                start = Math.round(start/1000); //We don't need milisecond accuracy!
+                $scope.data = [[], [], []];
+                $scope.labels = [];
+                $scope.series = [];
+                update_graph_data(agent, 'system.load', '1min', $scope, $http, start, 0);
+                update_graph_data(agent, 'system.load', '5min', $scope, $http, start, 1);
+                update_graph_data(agent, 'system.load', '15min', $scope, $http, start, 2);
 
-
-                    })
-                    .catch(function(err) {
-                        console.log('MASSIVE ERROR');
-                        console.log(err);
-                    });
                 this.host = agent;
             },
             controllerAs: 'agent'
         };
     });
 
+    function update_graph_data(agent, type, key, scope, http, start, series_index) {
+        http.get('http://dev.serapis:8000/0.01/data_items/load/' + agent.key + '/' + type + '/' + key + '?start=' + start)
+            .then(function(res) {
+                console.log('MASSIVE SUCCESS2');
+                var data = res.data.data;
+                data.forEach(function(obj) {
+                    scope.data[series_index].push(obj.value);
+                    if(series_index == 0) {
+                        scope.labels.push(new Date(obj.ts * 1000));
+                    }
+                });
+                scope.series.push(key);
+
+            })
+            .catch(function(err) {
+                console.log('MASSIVE ERROR2');
+                console.log(err);
+            });
+    }
+
     var agent = {
         shortName: 'test',
         name: 'test.lwtn.org',
-        key: '3fce4f1d-b74a-40fa-934f-9dd6c2717e6f'
+        key: '1497e439-87f3-4784-b949-e7c9487d888b'
     };
 
 })();
