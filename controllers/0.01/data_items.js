@@ -30,8 +30,25 @@ module.exports = function (router) {
         db.getDataPoints(
             req.params.agentKey, 
             req.params.type,
-            req.body.start,
-            req.body.end
+            req.query.start,
+            req.query.end
+        )
+        .then(function(data) {
+            res.json({data: data});
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.json({err: { code: 1002, msg: 'Failed to load data points'}});
+        });
+    });
+
+    router.get('/load/:agentKey/:type/:dataKey', function(req, res) {
+        db.getAggregateDataPoints(
+            req.params.agentKey,
+            req.params.dataKey,
+            req.params.type,
+            req.query.start,
+            req.query.end
         )
         .then(function(data) {
             res.json({data: data});
