@@ -1,0 +1,41 @@
+#!/bin/sh
+
+data_pre=()
+data_post=()
+data=()
+
+function get_eth_stats {
+    for interface in /sys/class/net/*; do 
+        rx_bytes=$(cat "$interface/statistics/rx_bytes")
+        tx_bytes=$(cat "$interface/statistics/tx_bytes")
+        interface="${interface##*/}"
+
+        if [ $1 == 'pre' ]; then
+            data_pre+=($interface)
+            data_pre+=($rx_bytes)
+            data_pre+=($tx_bytes)
+        else
+            data_post+=($interface)
+            data_post+=($rx_bytes)
+            data_post+=($tx_bytes)
+        fi
+    done
+}
+
+function join { local IFS="$1"; shift; echo -n "$*"; }
+
+get_eth_stats 'pre'
+sleep 1
+get_eth_stats 'post'
+
+for ((i=0;i<${#data_pre[@]};i+=3)); do
+    interface=${data_post[$i]}
+    rx_speed=$(((${data_post[$i+1]} - ${data_pre[$i+1]})/1024))
+    tx_speed=$(((${data_post[$i+2]} - ${data_pre[$i+2]})/1024))
+
+    data+=("$(printf '"%s": { "rx": %s, "tx": %s }' "$interface" "$rx_speed" "$tx_speed")")
+done
+
+echo -n '{'
+    join , "${data[@]}";
+echo '}'
