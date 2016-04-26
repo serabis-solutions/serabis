@@ -7,30 +7,31 @@
 extern crate rustc_serialize;
 extern crate toml;
 extern crate hyper;
+extern crate rand;
+extern crate env_logger;
 
-//mod config;
+mod config;
 mod plugin;
-//mod server;
+mod client;
 
 use std::sync::Arc;
-use std::thread;
 use std::path::Path;
 
 fn main() {
-    let plugin_path = Path::new("/etc/serapis/plugins");
-    let plugins = plugin::find_plugins( &plugin_path );
+    env_logger::init().unwrap();
 
-//    let m = config::Monitor::parse( "/etc/serapis/monitor.toml" );
+    //these are Arc because threads
+    let config_path = "/etc/serapis/monitor.toml";
+    debug!("loading config {}", &config_path );
+    let monitor_config = Arc::new( config::Monitor::parse( &config_path ) );
 
-//    let server = server::Server::new();
+    let client = Arc::new( client::Client::new( monitor_config.clone() ) );
 
-    let client = Arc::new( hyper::Client::new() );
+    let plugins = plugin::load_all( Path::new("/etc/serapis/plugins") );
 
     let handles: Vec<_> = plugins.into_iter().map(|p| {
-        let client = client.clone();
-        thread::spawn(move || {
-            p.run( client );
-        })
+        let client: Arc<client::Client> = client.clone();
+        p.run( client )
     }).collect();
 
     for h in handles {

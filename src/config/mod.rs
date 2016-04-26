@@ -1,2 +1,2 @@
-pub use self::monitor::Monitor;
 mod monitor;
+pub use self::monitor::Monitor;

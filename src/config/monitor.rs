@@ -8,8 +8,9 @@ use toml;
 
 #[derive(RustcEncodable, RustcDecodable, Debug)]
 pub struct Monitor {
-    pub account_id: String,
-    pub device_key: String,
+    pub account_key: String,
+    pub agent_key: String,
+    pub base_url: String,
 }
 
 impl Monitor {
