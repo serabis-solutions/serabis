@@ -99,7 +99,7 @@ class Database {
         }
 
         return this.db.manyOrNone(
-            'SELECT avg((data->>$5)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
+            'SELECT avg((data->\'data\'->>$5)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
             [
                 agentKey,
                 type,
