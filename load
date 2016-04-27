@@ -1,7 +1,7 @@
 #!/bin/sh
 
-one=`uptime | awk '{print $8}' | cut -c -4`
-five=`uptime | awk '{print $9}' | cut -c -4`
-fifteen=`uptime | awk '{print $10}' | cut -c -4`
+one=`cat /proc/loadavg | awk '{print $1}' | cut -c -4`
+five=`cat /proc/loadavg | awk '{print $2}' | cut -c -4`
+fifteen=`cat /proc/loadavg | awk '{print $3}' | cut -c -4`
 
 echo "$(printf '{"1min": %s, "5min": %s, "15min": %s}' $one $five $fifteen)"
