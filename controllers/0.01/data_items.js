@@ -7,7 +7,6 @@ module.exports = function (router) {
 
     router.post('/:accountKey/:agentKey', function(req, res) {
         var items = req.body;
-
         if(!Array.isArray(items)) {
             items = [items];
         }
@@ -15,6 +14,7 @@ module.exports = function (router) {
         db.saveDataPoints(items, req.params.accountKey, req.params.agentKey)
             .then(function(result) {
                 if(result != undefined && result['error']) {
+                    console.log(result['error']);
                     res.json ({ err: { code: 1003, msg: result['error'] }});
                 } else {
                     res.json({ dataPointsSaved: items.length } );
