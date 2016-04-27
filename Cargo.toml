@@ -11,6 +11,8 @@ clippy = { version = "=0.0.64", optional = true}
 hyper = "0.7"
 rand = "0.3"
 env_logger = "0.3"
+time = "0.1"
+mime = "0.1"
 
 [features]
 default=[]

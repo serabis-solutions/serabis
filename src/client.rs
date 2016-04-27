@@ -1,6 +1,8 @@
 use hyper;
+use hyper::header::{Headers,ContentType};
 use std::sync::Arc;
 use std::time::Duration;
+use time;
 
 const API_VERSION: &'static str = "0.01";
 
@@ -27,12 +29,17 @@ impl Client {
         let url = format!( "{}/{}/data_items/{}/{}", self.config.base_url, API_VERSION, self.config.account_key, self.config.agent_key );
         trace!( "{}: posting to {}", &name, &url );
 
-        let report = format!( r#"{{ "name": "{}", "data": {} }}"#, name, data );
+        let ts = time::now_utc().to_timespec().sec;
+        let report = format!( r#"[{{ "timestamp": "{}", "type": "{}", "data": {} }}]"#, ts, name, data );
         debug!( "{}", report );
+
+        let mut headers = Headers::new();
+        headers.set(ContentType(mime!(Application/Json; Charset=Utf8)));
 
         // there's no way to make this connection timeout sooner if the server isn't availble
         //   https://stackoverflow.com/questions/30022084/how-do-i-set-connect-timeout-on-tcpstream
         let res = self.hyper.post( &url )
+            .headers( headers )
             .body( &report )
             .send()
             .unwrap();
