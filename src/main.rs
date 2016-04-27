@@ -6,9 +6,11 @@
 
 extern crate rustc_serialize;
 extern crate toml;
-extern crate hyper;
+#[macro_use] extern crate hyper;
+#[macro_use] extern crate mime;
 extern crate rand;
 extern crate env_logger;
+extern crate time;
 
 mod config;
 mod plugin;
