@@ -22,9 +22,9 @@
                 $scope.data = [[], [], []];
                 $scope.labels = [];
                 $scope.series = [];
-                update_graph_data(agent, 'system.load', '1min', $scope, $http, start, 0);
-                update_graph_data(agent, 'system.load', '5min', $scope, $http, start, 1);
-                update_graph_data(agent, 'system.load', '15min', $scope, $http, start, 2);
+                update_graph_data(agent, 'load', '1min', $scope, $http, start, 0);
+                update_graph_data(agent, 'load', '5min', $scope, $http, start, 1);
+                update_graph_data(agent, 'load', '15min', $scope, $http, start, 2);
 
                 this.host = agent;
             },
