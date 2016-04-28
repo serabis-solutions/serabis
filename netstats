@@ -22,8 +22,6 @@ function get_eth_stats {
     done
 }
 
-function join { local IFS="$1"; shift; echo -n "$*"; }
-
 get_eth_stats 'pre'
 sleep 1
 get_eth_stats 'post'
@@ -36,6 +34,7 @@ for ((i=0;i<${#data_pre[@]};i+=3)); do
     data+=("$(printf '"%s": { "rx": %s, "tx": %s }' "$interface" "$rx_speed" "$tx_speed")")
 done
 
+function join { local IFS="$1"; shift; echo -n "$*"; }
 echo -n '{'
     join , "${data[@]}";
 echo '}'
