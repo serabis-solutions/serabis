@@ -1,4 +1,5 @@
 'use strict';
+var decode = require('urldecode');
 
 var dbModel = require('../../models/database');
 
@@ -29,7 +30,7 @@ module.exports = function (router) {
     router.get('/:agentKey/:type', function(req, res) {
         db.getDataPoints(
             req.params.agentKey, 
-            req.params.type,
+            decode(req.params.type),
             req.query.start,
             req.query.end
         )
@@ -45,8 +46,8 @@ module.exports = function (router) {
     router.get('/load/:agentKey/:type/:dataKey', function(req, res) {
         db.getAggregateDataPoints(
             req.params.agentKey,
-            req.params.dataKey,
-            req.params.type,
+            decode(req.params.dataKey),
+            decode(req.params.type),
             req.query.start,
             req.query.end
         )
