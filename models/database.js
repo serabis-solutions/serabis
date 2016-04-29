@@ -4,6 +4,7 @@ var config;
 class Database {
     constructor() {
         var pgp = require('pg-promise')({});
+        this._value = require('pg-promise/lib/formatting').as.value;
         this.db = pgp({
             host: 'localhost',
             port: 5432,
@@ -75,7 +76,21 @@ class Database {
             ]);
     }
 
- 
+    _parseDataKey(dataKey) {
+        var keys = dataKey.split(':');
+        var value = this._value;
+        var formatted = [];
+
+        keys.forEach(function(key) {
+            formatted.push("'".concat(value(key).concat("'")));
+        });
+
+        var cleanKey = formatted.join("->")
+            .replace(new RegExp('(.*)->'), '$1->>');
+
+        return cleanKey;
+    }
+
     getAggregateDataPoints(agentKey, dataKey, type, start, end) {
         start = Number(start);
         end = Number(end);
@@ -87,7 +102,7 @@ class Database {
             end = Math.round(Date.now() / 1000);
         }
 
-        dataKey = dataKey.replace(':', '->');
+        dataKey = this._parseDataKey(dataKey);
 
         var periodLength = 60; //1 minute
         if(end - start > 60*60*24*14) { //More than 2 weeks
@@ -99,7 +114,7 @@ class Database {
         }
 
         return this.db.manyOrNone(
-            'SELECT avg((data->\'data\'->>$5)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
+            'SELECT avg((data->\'data\'->$5:raw)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = \'$2#\' AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
             [
                 agentKey,
                 type,
