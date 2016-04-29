@@ -77,7 +77,7 @@ class Database {
     }
 
     _parseDataKey(dataKey) {
-        var keys = dataKey.split(':');
+        var keys = dataKey.split(/:(?!\\)/);
         var value = this._value;
         var formatted = [];
 
