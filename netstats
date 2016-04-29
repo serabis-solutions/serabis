@@ -28,8 +28,8 @@ get_eth_stats 'post'
 
 for ((i=0;i<${#data_pre[@]};i+=3)); do
     interface=${data_post[$i]}
-    rx_speed=$(((${data_post[$i+1]} - ${data_pre[$i+1]})/1024))
-    tx_speed=$(((${data_post[$i+2]} - ${data_pre[$i+2]})/1024))
+    rx_speed=$(printf "%.2f" $(echo ";((${data_post[$i+1]} - ${data_pre[$i+1]})/1024)"|bc))
+    tx_speed=$(printf "%.2f" $(echo ";((${data_post[$i+2]} - ${data_pre[$i+2]})/1024)"|bc))
 
     data+=("$(printf '"%s": { "rx": %s, "tx": %s }' "$interface" "$rx_speed" "$tx_speed")")
 done
