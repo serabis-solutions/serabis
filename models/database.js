@@ -76,16 +76,24 @@ class Database {
             ]);
     }
 
+    /* I'm fairly sure this is the ugliest code I've ever written in my */
+    /* life. Basically the split('').reverse().join('') bullshit is to  */
+    /* reverse a string. This is needed because JS doesn't support      */
+    /* look-behind regex, which we need to allow escaping of colons in  */
+    /* key names. Pg-promise's format is called on everything we don't  */
+    /* manually add, so it *should* be safe.                            */
     _parseDataKey(dataKey) {
-        var keys = dataKey.split(/:(?!\\)/);
+        var keys = dataKey.split('').reverse().join('').split(/:(?!\\)/).reverse();
         var value = this._value;
         var formatted = [];
 
         keys.forEach(function(key) {
+            key = key.split('').reverse().join('');
+            key = key.replace('\\:', ':');
             formatted.push("'".concat(value(key).concat("'")));
         });
 
-        var cleanKey = formatted.join("->")
+        var cleanKey = "->".concat(formatted.join("->"))
             .replace(new RegExp('(.*)->'), '$1->>');
 
         return cleanKey;
@@ -114,7 +122,7 @@ class Database {
         }
 
         return this.db.manyOrNone(
-            'SELECT avg((data->\'data\'->$5:raw)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = \'$2#\' AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
+            'SELECT avg((data->\'data\'$5:raw)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = \'$2#\' AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
             [
                 agentKey,
                 type,
