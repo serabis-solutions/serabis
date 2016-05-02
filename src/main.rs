@@ -24,7 +24,7 @@ fn main() {
 
     //these are Arc because threads
     let config_path = "/etc/serapis/monitor.toml";
-    debug!("loading config {}", &config_path );
+    info!("loading config {}", &config_path );
     let monitor_config = Arc::new( config::Monitor::parse( &config_path ) );
 
     let client = Arc::new( client::Client::new( monitor_config.clone() ) );

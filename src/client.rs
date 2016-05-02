@@ -31,7 +31,7 @@ impl Client {
 
         let ts = time::now_utc().to_timespec().sec;
         let report = format!( r#"[{{ "timestamp": "{}", "type": "{}", "data": {} }}]"#, ts, name, data );
-        debug!( "{}", report );
+        trace!( "{}", report );
 
         let mut headers = Headers::new();
         headers.set(ContentType(mime!(Application/Json; Charset=Utf8)));
@@ -43,6 +43,6 @@ impl Client {
             .body( &report )
             .send()
             .unwrap();
-        debug!( "{}: report {}", &name, res.status );
+        info!( "{}: report {}", &name, res.status );
     }
 }
