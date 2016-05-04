@@ -20,7 +20,8 @@
     "md5": "^2.0.0",
     "node-uuid": "^1.4.7",
     "pg-native": "^1.10.0",
-    "pg-promise": "^4.0.4"
+    "pg-promise": "^4.0.4",
+    "urldecode": "^1.0.1"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
