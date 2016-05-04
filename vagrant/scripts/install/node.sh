@@ -6,7 +6,7 @@ if [ ! -e /etc/apt/sources.list.d/nodesource.list ]; then
     echo 'deb https://deb.nodesource.com/node_4.x jessie main' | sudo tee /etc/apt/sources.list.d/nodesource.list
     echo 'deb-src https://deb.nodesource.com/node_4.x jessie main' | sudo tee -a /etc/apt/sources.list.d/nodesource.list
 
-    sudo apt-get -qq update
+    update_repo nodesource
 
     sudo apt-get install -y build-essential nodejs
 fi
