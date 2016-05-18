@@ -8,16 +8,62 @@
             controller: function (){
                 this.host = agent;
             },
-            controllerAs: 'agent'
+            controllerAs: 'agent',
+            scope: {},
         };
     });
 
-    app.directive('graph', function() {
+    app.directive('graphDiskSpace', function() {
         return {
             restrict: 'E',
             templateUrl: 'ng-components/graphs/default.html',
             controller: function ($scope, $http){
-                var start = Date.now() - (24 * 60 * 1000 * 60);
+                var start = Date.now() - (60 * 1000 * 60);
+                start = Math.round(start/1000); //We don't need milisecond accuracy!
+                $scope.data = [[], [], [], []];
+                $scope.labels = [];
+                $scope.series = [];
+                update_graph_data(agent, 'disk_space', '%2Fdev%2Fsda1:size', $scope, $http, start, 0);
+                update_graph_data(agent, 'disk_space', '%2Fdev%2Fsda1:used', $scope, $http, start, 1);
+                update_graph_data(agent, 'disk_space', '%2Fdev%2Fsda1:available', $scope, $http, start, 2);
+
+                this.host = agent;
+                this.type = 'DiskStats';
+            },
+            scope: {},
+            controllerAs: 'agent'
+        };
+    });
+
+    app.directive('graphNetstats', function() {
+        return {
+            restrict: 'E',
+            templateUrl: 'ng-components/graphs/default.html',
+            controller: function ($scope, $http){
+                var start = Date.now() - (60 * 1000 * 60);
+                start = Math.round(start/1000); //We don't need milisecond accuracy!
+                $scope.data = [[], [], [], []];
+                $scope.labels = [];
+                $scope.series = [];
+                update_graph_data(agent, 'netstats', 'eth0:rx', $scope, $http, start, 0);
+                update_graph_data(agent, 'netstats', 'eth0:tx', $scope, $http, start, 1);
+                update_graph_data(agent, 'netstats', 'eth1:rx', $scope, $http, start, 2);
+                update_graph_data(agent, 'netstats', 'eth1:tx', $scope, $http, start, 3);
+
+                this.host = agent;
+                this.type = 'Netstats';
+            },
+            scope: {},
+            controllerAs: 'agent'
+        };
+    });
+
+   app.directive('graph', function() {
+        return {
+            restrict: 'E',
+            templateUrl: 'ng-components/graphs/default.html',
+            controller: function ($scope, $http){
+                var start = Date.now() - (60 * 1000 * 60);
                 start = Math.round(start/1000); //We don't need milisecond accuracy!
                 $scope.data = [[], [], []];
                 $scope.labels = [];
@@ -27,7 +73,9 @@
                 update_graph_data(agent, 'load', '15min', $scope, $http, start, 2);
 
                 this.host = agent;
+                this.type = 'Load';
             },
+            scope: {},
             controllerAs: 'agent'
         };
     });
@@ -40,7 +88,13 @@
                 data.forEach(function(obj) {
                     scope.data[series_index].push(obj.value);
                     if(series_index == 0) {
-                        scope.labels.push(new Date(obj.ts * 1000));
+                        var date = new Date(obj.ts * 1000);
+                        var hours = date.getHours();
+                        var minutes = "0" + date.getMinutes();
+                        var seconds = "0" + date.getSeconds();
+
+                        var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+                        scope.labels.push(formattedTime);
                     }
                 });
                 scope.series.push(key);
