@@ -1,0 +1,11 @@
+#!/bin/bash
+
+function context_switch_count {
+    awk '/ctxt/ {print $2}' /proc/stat
+}
+
+first=$(context_switch_count)
+sleep 1
+second=$(context_switch_count)
+
+printf '{"context_switches": %d}' $(($second-$first))
