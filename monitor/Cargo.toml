@@ -1,0 +1,18 @@
+[package]
+name = "serapis-monitor"
+version = "0.1.0"
+authors = ["Mark Ellis <m@rkellis.com>"]
+
+[dependencies]
+toml = "0.1"
+log = "0.3"
+rustc-serialize = "0.3"
+clippy = { version = "=0.0.64", optional = true}
+hyper = "0.7"
+rand = "0.3"
+env_logger = "0.3"
+time = "0.1"
+mime = "0.1"
+
+[features]
+default=[]
