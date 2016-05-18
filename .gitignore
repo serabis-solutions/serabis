@@ -1,3 +1,3 @@
-node_modules
-npm-debug.log
+api/node_modules
+api/npm-debug.log
 .vagrant/
