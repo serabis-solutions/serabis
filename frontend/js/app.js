@@ -1,5 +1,5 @@
 (function() {
-    var app = angular.module('serapis', ['chart.js']);
+    var app = angular.module('serapis', ['chart.js']); //.config(function($locationProvider) { $locationProvider.html5Mode(true); }); 
 
     app.directive('agentHeader', function() {
         return {
@@ -17,9 +17,10 @@
         return {
             restrict: 'E',
             templateUrl: 'ng-components/graphs/default.html',
-            controller: function ($scope, $http){
+            controller: function ($scope, $http, $location){
                 var start = Date.now() - (60 * 1000 * 60);
                 start = Math.round(start/1000); //We don't need milisecond accuracy!
+                agent['key'] = $location.search()['agent'];
                 $scope.data = [[], [], [], []];
                 $scope.labels = [];
                 $scope.series = [];
@@ -39,10 +40,11 @@
         return {
             restrict: 'E',
             templateUrl: 'ng-components/graphs/default.html',
-            controller: function ($scope, $http){
+            controller: function ($scope, $http, $location){
                 var start = Date.now() - (60 * 1000 * 60);
                 start = Math.round(start/1000); //We don't need milisecond accuracy!
                 $scope.data = [[], [], [], []];
+                agent['key'] = $location.search()['agent'];
                 $scope.labels = [];
                 $scope.series = [];
                 update_graph_data(agent, 'netstats', 'eth0:rx', $scope, $http, start, 0);
@@ -62,8 +64,9 @@
         return {
             restrict: 'E',
             templateUrl: 'ng-components/graphs/default.html',
-            controller: function ($scope, $http){
+            controller: function ($scope, $http, $location){
                 var start = Date.now() - (60 * 1000 * 60);
+                agent['key'] = $location.search()['agent'];
                 start = Math.round(start/1000); //We don't need milisecond accuracy!
                 $scope.data = [[], [], []];
                 $scope.labels = [];
@@ -109,8 +112,7 @@
     var agent = {
         shortName: 'test',
         name: 'test.lwtn.org',
-        key: '1497e439-87f3-4784-b949-e7c9487d888b'
+        key: ''
     };
-
 })();
 

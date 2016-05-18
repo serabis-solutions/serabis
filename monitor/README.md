@@ -16,7 +16,7 @@ base_url = "http://dev.serapis:8000"
 
 ```bash
 #if you have monitor-plugins checked out
-ln -s ~/workspace/serapis/monitor-plugins /etc/serapis/plugins
+ln -s /vagrant/monitor-plugins /etc/serapis/plugins
 
 #or just
 mkdir /etc/serapis/plugins
