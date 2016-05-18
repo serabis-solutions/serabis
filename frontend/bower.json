@@ -1,0 +1,25 @@
+{
+  "name": "serapis-frontend",
+  "authors": [
+    "Graeme Lawton <graeme@la.wton.email>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.5.0",
+    "bootstrap": "~3.3.6",
+    "angular-chart.js": "~0.8.8",
+    "Chart.js": "~1.0.2"
+  }
+}
