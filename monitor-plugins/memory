@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+open my $fh, "<", "/proc/meminfo";
+my @data;
+
+while ( <$fh> ) {
+    chomp;
+
+    #change camel to snake case
+    $_ =~ s/((?<=[a-z])[A-Z]+)/_\U$1/g;
+    my ($key, $value) = $_ =~ /^(.+):\s+(\d+)/;
+    push @data, "\"\L$key\": $value";
+}
+
+my $joined = join ', ', @data;
+print "{$joined}";

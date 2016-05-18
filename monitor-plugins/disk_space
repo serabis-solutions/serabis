@@ -1,0 +1,16 @@
+#!/bin/bash
+
+data=()
+
+while read device size used available capacity mount; do
+    data+=("$(
+        printf \
+            '"%s": { "size": %s, "used": %s, "available": %s, "capacity": "%s", "mount": "%s" }' \
+            "$device" "$size" "$used" "$available" "$capacity" "$mount"
+    )")
+done < <( df -P | grep '^\/dev\/' )
+
+function join { local IFS="$1"; shift; echo -n "$*"; }
+echo -n '{'
+    join , "${data[@]}";
+echo '}'
