@@ -6,6 +6,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     #versions newer than this use rsync to share the vagrant folder. not cool
     config.vm.box_version = '8.2.1'
 
+    config.vm.provider "virtualbox" do |v|
+            v.memory = 2048
+    end
+
     config.vm.hostname = "dev.serapis"
     config.ssh.forward_agent = true
     config.hostmanager.enabled = true

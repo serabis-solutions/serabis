@@ -2,7 +2,7 @@
 
 ## first run
 ```
-cd /vagrant
+cd /vagrant/api
 npm install
 db-migrate --config config/database.json -e dev up
 ```
