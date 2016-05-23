@@ -11,6 +11,7 @@ extern crate toml;
 extern crate rand;
 extern crate env_logger;
 extern crate time;
+extern crate pine;
 
 mod config;
 mod plugin;
@@ -24,8 +25,8 @@ fn main() {
 
     //these are Arc because threads
     let config_path = "/etc/serapis/monitor.toml";
-    info!("loading config {}", &config_path );
-    let monitor_config = Arc::new( config::Monitor::parse( &config_path ) );
+    info!("loading config {}", config_path );
+    let monitor_config = Arc::new( config::Monitor::parse( config_path ) );
 
     let client = Arc::new( client::Client::new( monitor_config.clone() ) );
 
