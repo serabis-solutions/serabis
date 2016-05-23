@@ -1,12 +1,15 @@
 use std::fs::read_dir;
 use std::path::Path;
-use std::process::Command;
 use std::time::Duration;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use rand;
 use rand::distributions::{IndependentSample, Range};
+
+use std::process::{Command, Stdio};
+use pine;
+use pine::Line;
 
 use client;
 
@@ -25,7 +28,7 @@ impl Plugin {
 
     // take ownership of self and move it into the new thread
     pub fn run( self, client: Arc<client::Client> ) -> JoinHandle<()> {
-        thread::spawn( move || {
+        thread::Builder::new().name( self.name.to_string() ).spawn(move || {
             let mut rng = rand::thread_rng();
             let splay_range = Range::new( 0, 59 );
             let splay = splay_range.ind_sample( &mut rng );
@@ -34,18 +37,24 @@ impl Plugin {
             thread::sleep( Duration::from_secs( splay ) );
 
             loop {
-                let output = Command::new( &self.path )
-                    .output()
+                let mut process = Command::new( &self.path )
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
                     .unwrap_or_else(|e| { die!("failed to execute process, `{}`: {}", &self.path, e) });
 
-                // XXX streaming output (eg inotify watcher)
-                let stdout = String::from_utf8( output.stdout ).unwrap().trim().to_owned();
-                client.report( &self.name, &stdout );
+                let lines = pine::lines(&mut process);
+                for line in lines.iter() {
+                    match line {
+                        Line::StdOut(line) => client.report( &self.name, line.trim() ),
+                        Line::StdErr(line) => die!("err -> '{}'", line.trim_right() )
+                    }
+                }
 
-                //XXX should be configurable?
+                //XXX this should be configurable
                 thread::sleep( Duration::from_secs( 60 ) );
             };
-        } )
+        } ).unwrap()
     }
 }
 
