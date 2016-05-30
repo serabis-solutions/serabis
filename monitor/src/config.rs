@@ -1,12 +1,9 @@
-//stolen from https://github.com/polyfractal/cormorant/blob/master/src/config.rs
-
 use std::fs::File;
 use std::io::prelude::*;
-#[allow(unused_imports)]
 use toml::{Parser, Value, Decoder};
-use toml;
+use serde::Deserialize;
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Deserialize)]
 pub struct Monitor {
     pub account_key: String,
     pub agent_key: String,
@@ -35,7 +32,8 @@ impl Monitor {
             die!("Exiting server");
         }
 
-        let config = Value::Table( toml.unwrap() );
-        toml::decode(config).unwrap_or_else( || die!("invalid config") )
+        let mut config = Decoder::new( Value::Table( toml.unwrap() ) );
+
+        Deserialize::deserialize( &mut config ).expect("helpful error")
     }
 }

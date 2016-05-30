@@ -1,10 +1,12 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
+#![feature(custom_derive, plugin)]
+#![plugin(serde_macros)]
+
 #[macro_use] extern crate log;
 #[macro_use] mod macros;
 
-extern crate rustc_serialize;
 extern crate toml;
 #[macro_use] extern crate hyper;
 #[macro_use] extern crate mime;
@@ -12,6 +14,7 @@ extern crate rand;
 extern crate env_logger;
 extern crate time;
 extern crate pine;
+extern crate serde;
 
 mod config;
 mod plugin;

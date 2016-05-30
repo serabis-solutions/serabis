@@ -30,16 +30,17 @@ plugins need to output valid json
 
 ## to run
 
-you'll need mutlirust, install it then run
+you'll need [rustup.rs](https://www.rustup.rs/), install it then run
 
 ```bash
 cd $checkout
 
-#always use nightly this dir (compiler plugins and things)
-multirust update nightly-2016-04-26
-multirust override nightly-2016-04-26
+rustup update nightly
 
-RUST_LOG=serapis_monitor=debug cargo run --features clippy
+RUST_LOG=serapis_monitor=debug cargo run --features "clippy short_splay"
+
+#if the above fails, you might need to run and try again
+cargo update
 ```
 
 ### echo http server
