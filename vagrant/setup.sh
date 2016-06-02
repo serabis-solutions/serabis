@@ -18,12 +18,12 @@ fi
 
 install rabbitmq
 
-sudo rabbitmqctl list_vhosts | grep "^/serapis$" -q || {
-    sudo rabbitmqctl add_vhost /serapis
+sudo rabbitmqctl list_vhosts | grep "^serapis$" -q || {
+    sudo rabbitmqctl add_vhost serapis
     #give admin use access to this vhost in the managment interface
-    sudo rabbitmqctl set_permissions -p /serapis admin ".*" ".*" ".*"
+    sudo rabbitmqctl set_permissions -p serapis admin ".*" ".*" ".*"
 }
 sudo rabbitmqctl list_users | grep "^inserter\b" -q || {
     sudo rabbitmqctl add_user inserter reallysecure
-    sudo rabbitmqctl set_permissions -p /serapis inserter ".*" ".*" ".*"
+    sudo rabbitmqctl set_permissions -p serapis inserter ".*" ".*" ".*"
 }

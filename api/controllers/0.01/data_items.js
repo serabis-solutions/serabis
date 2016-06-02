@@ -2,9 +2,11 @@
 var decode = require('urldecode');
 
 var dbModel = require('../../models/database');
+var mqModel = require('../../models/mq');
 
 module.exports = function (router) {
     var db = dbModel.new();
+    var mq = mqModel.new();
 
     router.post('/:accountKey/:agentKey', function(req, res) {
         var items = req.body;
@@ -19,6 +21,11 @@ module.exports = function (router) {
                     res.json ({ err: { code: 1003, msg: result['error'] }});
                 } else {
                     res.json({ dataPointsSaved: items.length } );
+                    items.forEach(function (item) {
+                        item['agent'] = req.params.agentKey;
+                        item['account'] = req.params.accountKey;
+                        mq.publish(item, 'data_items');
+                    });
                 }
             })
             .catch(function(err) {
