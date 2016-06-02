@@ -48,9 +48,10 @@ class Database {
             [ agentKey, accountKey ])
         .then(function(data) {
             var q = model._buildDataPointsQuery(dataPoints, agentKey);
-            return model.db.none(q.text, q.values );
+            return model.db.manyOrNone(q.text, q.values );
         })
         .catch(function(err) {
+            console.log(err);
             return {error: "Unable to validate agent_key and/or account_key"};
         });
     }
