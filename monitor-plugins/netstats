@@ -1,40 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env perl
+use strict;
+use warnings;
 
-data_pre=()
-data_post=()
-data=()
+my $interfaces = {};
+my $basename_reg = qr|.*/(.+)|;
 
-function get_eth_stats {
-    for interface in /sys/class/net/*; do 
-        rx_bytes=$(cat "$interface/statistics/rx_bytes")
-        tx_bytes=$(cat "$interface/statistics/tx_bytes")
-        interface="${interface##*/}"
+for my $interface_dir ( </sys/class/net/*> ) {
+    my ( $interface ) = ( $interface_dir =~ m/$basename_reg/ );
 
-        if [ $1 == 'pre' ]; then
-            data_pre+=($interface)
-            data_pre+=($rx_bytes)
-            data_pre+=($tx_bytes)
-        else
-            data_post+=($interface)
-            data_post+=($rx_bytes)
-            data_post+=($tx_bytes)
-        fi
-    done
+    $interfaces->{ $interface } = {};
+
+    for my $stat_file ( <$interface_dir/statistics/*> ) {
+        open my $fh, '<', $stat_file;
+        my $stat_value = <$fh>;
+        chomp $stat_value;
+
+        my ( $stat ) = ( $stat_file =~ m/$basename_reg/ );
+
+        $interfaces->{ $interface }->{ $stat } = $stat_value;
+    }
 }
+print to_json( $interfaces ), "\n";
 
-get_eth_stats 'pre'
-sleep 1
-get_eth_stats 'post'
 
-for ((i=0;i<${#data_pre[@]};i+=3)); do
-    interface=${data_post[$i]}
-    rx_speed=$(printf "%.2f" $(echo ";((${data_post[$i+1]} - ${data_pre[$i+1]})/1024)"|bc))
-    tx_speed=$(printf "%.2f" $(echo ";((${data_post[$i+2]} - ${data_pre[$i+2]})/1024)"|bc))
 
-    data+=("$(printf '"%s": { "rx": %s, "tx": %s }' "$interface" "$rx_speed" "$tx_speed")")
-done
 
-function join { local IFS="$1"; shift; echo -n "$*"; }
-echo -n '{'
-    join , "${data[@]}";
-echo '}'
+#XXX make a library + test
+#minimal - not to spec, but just enough
+sub to_json {
+    my $value = shift;
+
+    my $ref = ref $value;
+    if ( !$ref ) {
+        if ( !defined( $value ) ) {
+            return 'null'
+        }
+        elsif ( $value =~ m/^\d+$/ ) {
+            return $value
+        }
+        else {
+            #doesn't handle " or \
+            return qq/"$value"/
+        }
+    }
+    elsif ( $ref eq 'HASH' ) {
+        my @stack;
+        foreach my $key ( keys %$value ) {
+            my $value = to_json( $value->{$key} );
+            push @stack, qq/"$key" : $value/;
+        }
+        return "{" . (join ', ', @stack) . "}"
+    }
+    elsif ( $ref eq 'ARRAY' ) {
+        my @stack;
+        foreach my $value ( @$value ) {
+            push @stack, to_json( $value );
+        }
+        return "[" . (join ', ', @stack) . "]"
+    }
+}
