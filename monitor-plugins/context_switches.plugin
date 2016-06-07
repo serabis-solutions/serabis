@@ -1,0 +1,2 @@
+timeout = 60
+command = "/etc/serapis/plugins/context_switches"
