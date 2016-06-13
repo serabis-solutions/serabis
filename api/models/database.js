@@ -48,10 +48,9 @@ class Database {
             [ agentKey, accountKey ])
         .then(function(data) {
             var q = model._buildDataPointsQuery(dataPoints, agentKey);
-            return model.db.manyOrNone(q.text, q.values );
+            return model.db.none(q.text, q.values );
         })
         .catch(function(err) {
-            console.log(err);
             return {error: "Unable to validate agent_key and/or account_key"};
         });
     }
@@ -153,6 +152,22 @@ class Database {
                 start,
                 end
             ]);
+    }
+
+    //Add a new condition
+    addCondition(accountKey, name, shortname) {
+        return this.db.one(
+            'INSERT INTO conditions (account_id, name, shortname) VALUES ((SELECT id FROM accounts WHERE key = $1), $2, $3) RETURNING id',
+            [accountKey, name, shortname]
+        );
+    }
+
+
+    addConditionComponent(condition_id, type, opperator, value) {
+        return this.db.one(
+            'INSERT INTO condition_components (condition_id, type, opperator, trigger_value) VALUES ($1, $2, $3, $4) RETURNING id',
+            [condition_id, type, opperator, value]
+        );
     }
 }
 
