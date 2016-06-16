@@ -12,17 +12,23 @@ class MQ{
     };
 
 
-    publish(data, queue) {
+
+    publish(data, key) {
+
+      // do you really want to open and close a channel every time?
+      // I was going to make it open at connect and stash it, but it
+      // doesn't seem very nodejs
         this.mq.then(function(conn) {
             return conn.createChannel();
         }).then(function(ch) {
-            return ch.assertQueue(queue)
+          // so it seems "config" is undefined?
+          var exchange_name = "exchange"; //such a bad name. meh
+
+          //same with this. there's no need to do it everytime do it once at startup
+            return ch.assertExchange(exchange_name, 'topic', {durable: true})
                 .then(function(ok) {
-                    return ch.sendToQueue(
-                        queue, 
-                        new Buffer(JSON.stringify(data)
-                    ));
-                });
+                    return ch.publish(exchange_name, key, new Buffer(JSON.stringify(data)));
+                } );
         });
     };
 }

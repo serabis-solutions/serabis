@@ -24,7 +24,7 @@ module.exports = function (router) {
                     items.forEach(function (item) {
                         item['agent'] = req.params.agentKey;
                         item['account'] = req.params.accountKey;
-                        mq.publish(item, 'data_items');
+                        mq.publish(item, 'metric.new');
                     });
                 }
             })
