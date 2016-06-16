@@ -27,11 +27,11 @@ fn main() {
     env_logger::init().unwrap();
 
     //these are Arc because threads
-    let config_path = "/etc/serapis/monitor.toml";
+    let config_path = "/etc/serapis/agent.toml";
     info!("loading config {}", config_path );
-    let monitor_config = Arc::new( config::Monitor::parse( config_path ) );
+    let agent_config = Arc::new( config::AgentConfig::parse( config_path ) );
 
-    let client = Arc::new( client::Client::new( monitor_config.clone() ) );
+    let client = Arc::new( client::Client::new( agent_config.clone() ) );
 
     let plugins = plugin::load_all( Path::new("/etc/serapis/plugins") );
 

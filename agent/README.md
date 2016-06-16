@@ -4,7 +4,7 @@ sudo mkdir /etc/serapis
 ```
 
 ## config
-config needs to be made in `/etc/serapis/monitor.toml`
+config needs to be made in `/etc/serapis/agent.toml`
 
 ```toml
 account_key = "$account_key"
@@ -15,8 +15,8 @@ base_url = "http://dev.serapis:8000"
 ## plugins
 
 ```bash
-#if you have monitor-plugins checked out
-ln -s /vagrant/monitor-plugins /etc/serapis/plugins
+#if you have agent-plugins checked out
+ln -s /vagrant/agent-plugins /etc/serapis/plugins
 
 #or just
 mkdir /etc/serapis/plugins
@@ -37,7 +37,7 @@ cd $checkout
 
 rustup update nightly
 
-RUST_LOG=serapis_monitor=debug cargo run --features "clippy short_splay"
+RUST_LOG=serapis_agent=debug cargo run --features "clippy short_splay"
 
 #if the above fails, you might need to run and try again
 cargo update

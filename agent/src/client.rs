@@ -7,13 +7,13 @@ use time;
 const API_VERSION: &'static str = "0.01";
 
 pub struct Client {
-    config  : Arc<config::Monitor>,
+    config  : Arc<config::AgentConfig>,
     hyper   : Arc<hyper::Client>,
 }
 use config;
 
 impl Client {
-    pub fn new( config: Arc<config::Monitor> ) -> Client {
+    pub fn new( config: Arc<config::AgentConfig> ) -> Client {
         let mut client = hyper::Client::new();
         client.set_read_timeout( Some( Duration::from_secs( 10 ) ) );
         client.set_write_timeout( Some( Duration::from_secs( 10 ) ) );
