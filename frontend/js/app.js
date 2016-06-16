@@ -47,10 +47,10 @@
                 agent['key'] = $location.search()['agent'];
                 $scope.labels = [];
                 $scope.series = [];
-                update_graph_data(agent, 'netstats', 'eth0:rx', $scope, $http, start, 0);
-                update_graph_data(agent, 'netstats', 'eth0:tx', $scope, $http, start, 1);
-                update_graph_data(agent, 'netstats', 'eth1:rx', $scope, $http, start, 2);
-                update_graph_data(agent, 'netstats', 'eth1:tx', $scope, $http, start, 3);
+                update_graph_data(agent, 'netstats', 'eth0:rx_bytes', $scope, $http, start, 0);
+                update_graph_data(agent, 'netstats', 'eth0:tx_bytes', $scope, $http, start, 1);
+                update_graph_data(agent, 'netstats', 'eth1:rx_bytes', $scope, $http, start, 2);
+                update_graph_data(agent, 'netstats', 'eth1:tx_bytes', $scope, $http, start, 3);
 
                 this.host = agent;
                 this.type = 'Netstats';
