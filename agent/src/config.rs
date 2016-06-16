@@ -4,14 +4,14 @@ use toml::{Parser, Value, Decoder};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct Monitor {
+pub struct AgentConfig {
     pub account_key: String,
     pub agent_key: String,
     pub base_url: String,
 }
 
-impl Monitor {
-    pub fn parse(path: &str) -> Monitor {
+impl AgentConfig {
+    pub fn parse(path: &str) -> Self {
         let mut config_toml = String::new();
 
         let mut file = File::open(path).unwrap_or_else( |e| die!( "couldn't find config file, {}", e ) );

@@ -1,5 +1,5 @@
 [package]
-name = "serapis-monitor"
+name = "serapis-agent"
 version = "0.1.0"
 authors = ["Mark Ellis <m@rkellis.com>"]
 
