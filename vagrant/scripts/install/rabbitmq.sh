@@ -1,6 +1,6 @@
 if [ ! -e /etc/apt/sources.list.d/rabbitmq.list ]; then
     echo "deb http://www.rabbitmq.com/debian/ testing main" | sudo tee /etc/apt/sources.list.d/rabbitmq.list
-    curl -s https://www.rabbitmq.com/rabbitmq-signing-key-public.asc | sudo apt-key add -
+    curl -s https://www.rabbitmq.com/rabbitmq-release-signing-key.asc | sudo apt-key add -
     update_repo rabbitmq
 
     sudo apt-get install rabbitmq-server -y
