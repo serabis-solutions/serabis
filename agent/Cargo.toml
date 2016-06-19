@@ -15,6 +15,7 @@ pine = "0.1"
 serde = "0.7"
 serde_macros = "0.7"
 toml = { version = "0.1", default-features = false, features = ["serde"] }
+quick-error = '1.1'
 
 [features]
 default=[]
