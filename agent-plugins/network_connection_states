@@ -1,0 +1,52 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+my %state_counts;
+my @ss = `ss`;
+shift @ss; #this one is column names
+
+foreach my $row ( @ss ) {
+    my $state = [split /\s+/, $row]->[1];
+    $state_counts{ $state }++;
+}
+print to_json( \%state_counts );
+
+
+
+
+
+#XXX make a library + test
+#minimal - not to spec, but just enough
+sub to_json {
+    my $value = shift;
+
+    my $ref = ref $value;
+    if ( !$ref ) {
+        if ( !defined( $value ) ) {
+            return 'null'
+        }
+        elsif ( $value =~ m/^\d+$/ ) {
+            return $value
+        }
+        else {
+            #doesn't handle " or \
+            return qq/"$value"/
+        }
+    }
+    elsif ( $ref eq 'HASH' ) {
+        my @stack;
+        foreach my $key ( keys %$value ) {
+            my $value = to_json( $value->{$key} );
+            push @stack, qq/"$key" : $value/;
+        }
+        return "{" . (join ', ', @stack) . "}"
+    }
+    elsif ( $ref eq 'ARRAY' ) {
+        my @stack;
+        foreach my $value ( @$value ) {
+            push @stack, to_json( $value );
+        }
+        return "[" . (join ', ', @stack) . "]"
+    }
+}
