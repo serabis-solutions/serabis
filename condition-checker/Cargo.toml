@@ -1,0 +1,8 @@
+[package]
+name = "condition-checker"
+version = "0.1.0"
+authors = ["Graeme Lawton <graeme@la.wton.email>"]
+
+[dependencies]
+postgres = "0.11"
+quick-error = "1.1"
