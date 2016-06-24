@@ -15,8 +15,7 @@ struct Agent {
 
 fn main() {
 
-    let conn = Connection::connect("postgres://serapis:reallysecure@localhost:5432/serapis_dev", SslMode::None).unwrap();
-    let db = db::Db::new(conn);
+    let db = db::Db::new();
     println!("{:?}", db.tables.accounts.get_accounts());
     println!("Hello, world!");
 }

@@ -1,10 +1,11 @@
 use super::Table;
 use postgres::Connection;
+use std::rc::Rc;
 
 //Table 
 #[derive(Debug)]
-pub struct Agents<'a> {
-   conn: &'a Connection
+pub struct Agents {
+   conn: Rc<Connection>,
 }
 
 //Row
@@ -13,7 +14,7 @@ pub struct Agent {
     id: i32
 }
 
-impl<'a> Agents<'a> {
+impl Agents {
     pub fn get_agents(&self) -> Vec<Agent> {
         let mut agents = vec![];
 
@@ -27,8 +28,8 @@ impl<'a> Agents<'a> {
     }
 }
 
-impl<'a> Table<'a> for Agents<'a> {
-    fn new(conn: &'a Connection) -> Self {
+impl Table for Agents {
+    fn new(conn: Rc<Connection>) -> Self {
         Agents {
             conn: conn
         }

@@ -1,33 +1,35 @@
 use postgres::{Connection, SslMode};
 use tables::*;
 use quick_error::ResultExt;
+use std::rc::Rc;
 
 //Add table definitions here
-pub struct Tables<'a> {
-    pub accounts: Accounts<'a>,
-    pub agents: Agents<'a>,
+pub struct Tables {
+    pub accounts: Accounts,
+    pub agents: Agents,
 }
 
-pub struct Db<'a> {
-    pub conn: Connection,
-    pub tables: Tables<'a>
+pub struct Db {
+    pub conn: Rc<Connection>,
+    pub tables: Tables
 }
 
-impl<'a> Db<'a> {
-    pub fn new(connection: Connection) -> Db<'a> {
-        let connectiontwo = Connection::connect("postgres://serapis:reallysecure@localhost:5432/serapis_dev", SslMode::None).unwrap(); 
-        let conn = &connectiontwo;
+impl Db {
+    pub fn new() -> Db {
+        let conn = Rc::new( Connection::connect("postgres://serapis:reallysecure@localhost:5432/serapis_dev", SslMode::None).unwrap() );
+
         Db{
-            conn: connectiontwo,
             tables: Tables{
-                accounts: Accounts::new(conn),
-                agents: Agents::new(conn),
-            }
+                accounts: Accounts::new( conn.clone() ),
+                agents: Agents::new( conn.clone() ),
+            },
+            conn: conn,
         }
 
     }
 
 }
+
 quick_error! {
     #[derive(Debug)]
     pub enum TableLoadError {
@@ -37,4 +39,3 @@ quick_error! {
         }
     }
 }
-
