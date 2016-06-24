@@ -1,11 +1,11 @@
 use super::Table;
-use postgres::Connection;
-use std::rc::Rc;
+use r2d2_postgres::{PostgresConnectionManager};
+use r2d2::{Pool};
 
 //Table 
 #[derive(Debug)]
 pub struct Agents {
-   conn: Rc<Connection>,
+   pool: Pool<PostgresConnectionManager>,
 }
 
 //Row
@@ -17,8 +17,9 @@ pub struct Agent {
 impl Agents {
     pub fn get_agents(&self) -> Vec<Agent> {
         let mut agents = vec![];
+        let conn = self.pool.clone().get().unwrap();
 
-        for row in self.conn.query("SELECT id FROM agents", &[]).unwrap().iter() {
+        for row in conn.query("SELECT id FROM agents", &[]).unwrap().iter() {
             agents.push(Agent {
                 id: row.get(0),
             });
@@ -29,9 +30,9 @@ impl Agents {
 }
 
 impl Table for Agents {
-    fn new(conn: Rc<Connection>) -> Self {
+    fn new(pool: Pool<PostgresConnectionManager>) -> Self {
         Agents {
-            conn: conn
+            pool: pool
         }
     }
 }
