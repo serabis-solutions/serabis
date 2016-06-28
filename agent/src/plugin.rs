@@ -12,7 +12,7 @@ use pine;
 use pine::Line;
 
 use config::PluginConfig;
-use config::{Loader, ConfigLoadError};
+use config_loader::{Loader, ConfigLoadError};
 
 use client;
 
@@ -57,7 +57,9 @@ impl Plugin {
     pub fn new( name: &str, path: &Path ) -> Result<Plugin, PluginError> {
         info!( "loading plugin {}", &name );
 
+        info!( "loading plugin config {}", path.display() );
         let config = try!( PluginConfig::new_from_file( path ) );
+        trace!( "{:?}", &config );
 
         let mut rng = rand::thread_rng();
         let splay_range = Range::new( 0, SPLAY_MAX );

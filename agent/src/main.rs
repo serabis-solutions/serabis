@@ -16,6 +16,7 @@ extern crate env_logger;
 extern crate time;
 extern crate pine;
 extern crate serde;
+extern crate config_loader;
 
 mod config;
 mod plugin;
@@ -24,7 +25,7 @@ mod client;
 use std::sync::Arc;
 use std::path::Path;
 
-use config::Loader;
+use config_loader::Loader;
 
 const CONFIG_PATH: &'static str = "/etc/serapis/agent.toml";
 const PLUGIN_PATH: &'static str = "/etc/serapis/plugins";
@@ -32,10 +33,12 @@ const PLUGIN_PATH: &'static str = "/etc/serapis/plugins";
 fn main() {
     env_logger::init().unwrap();
 
+    info!( "loading agent config {}", &CONFIG_PATH );
     let agent_config = match config::AgentConfig::new_from_file( Path::new( &CONFIG_PATH ) ) {
         Ok(v)  => Arc::new( v ), //Arc because threads
         Err(e) => die!("{}", e ),
     };
+    trace!( "{:?}", &agent_config );
 
     let client = Arc::new( client::Client::new( agent_config.clone() ) );
 
