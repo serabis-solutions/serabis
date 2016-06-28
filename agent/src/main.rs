@@ -6,6 +6,7 @@
 
 #[macro_use] extern crate log;
 #[macro_use] mod macros;
+#[macro_use] extern crate quick_error;
 
 extern crate toml;
 #[macro_use] extern crate hyper;
@@ -23,24 +24,44 @@ mod client;
 use std::sync::Arc;
 use std::path::Path;
 
+use config::Loader;
+
+const CONFIG_PATH: &'static str = "/etc/serapis/agent.toml";
+const PLUGIN_PATH: &'static str = "/etc/serapis/plugins";
+
 fn main() {
     env_logger::init().unwrap();
 
-    //these are Arc because threads
-    let config_path = "/etc/serapis/agent.toml";
-    info!("loading config {}", config_path );
-    let agent_config = Arc::new( config::AgentConfig::parse( config_path ) );
+    let agent_config = match config::AgentConfig::new_from_file( Path::new( &CONFIG_PATH ) ) {
+        Ok(v)  => Arc::new( v ), //Arc because threads
+        Err(e) => die!("{}", e ),
+    };
 
     let client = Arc::new( client::Client::new( agent_config.clone() ) );
 
-    let plugins = plugin::load_all( Path::new("/etc/serapis/plugins") );
+    let plugins = match plugin::load_all( Path::new( &PLUGIN_PATH ) ) {
+        Ok(v)  => v,
+        Err(e) => die!("{}", e),
+    };
 
     let handles: Vec<_> = plugins.into_iter().map(|p| {
         let client: Arc<client::Client> = client.clone();
-        p.run( client )
+        match p.run( client ) {
+            Ok(v)   => v,
+            Err(e)  => die!("failed to spawn thread {}", e),
+        }
     }).collect();
 
     for h in handles {
-        h.join().unwrap();
+        //XXX should we try and restart the thread?
+
+        //did the thread builder fail?
+        match h.join() {
+            Err(e) => die!( "failed to join thread {:?}", e ),
+            Ok(v) => match v {
+                Err(e) => die!( "plugin failed to run {}", e ),
+                Ok(v) => v,
+            }
+        };
     }
 }

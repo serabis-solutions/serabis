@@ -1,10 +1,20 @@
 use hyper;
-use hyper::header::{Headers,ContentType};
+use hyper::header::{Headers, ContentType};
 use std::sync::Arc;
 use std::time::Duration;
 use time;
 
 const API_VERSION: &'static str = "0.01";
+
+quick_error! {
+    #[derive(Debug)]
+    pub enum ClientError {
+        Hyper(err: hyper::Error) {
+            from()
+            display( "{}", err )
+        }
+    }
+}
 
 pub struct Client {
     config  : Arc<config::AgentConfig>,
@@ -25,7 +35,7 @@ impl Client {
     }
 
     //XXX better name
-    pub fn report( &self, name: &str, data: &str ) {
+    pub fn report( &self, name: &str, data: &str ) -> Result<hyper::client::Response, ClientError>{
         let url = format!( "{}/{}/data_items/{}/{}", self.config.base_url, API_VERSION, self.config.account_key, self.config.agent_key );
         trace!( "{}: posting to {}", &name, &url );
 
@@ -38,11 +48,13 @@ impl Client {
 
         // there's no way to make this connection timeout sooner if the server isn't availble
         //   https://stackoverflow.com/questions/30022084/how-do-i-set-connect-timeout-on-tcpstream
-        let res = self.hyper.post( &url )
+        let res = try!( self.hyper.post( &url )
             .headers( headers )
             .body( &report )
-            .send()
-            .unwrap();
+            .send() );
+
         info!( "{}: report {}", &name, res.status );
+
+        Ok(res)
     }
 }
