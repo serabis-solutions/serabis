@@ -1,4 +1,4 @@
-use super::Loader;
+use config_loader::Loader;
 
 #[derive(Deserialize, Debug)]
 pub struct AgentConfig {

@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use toml::{Parser, Value, Decoder};
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use quick_error::ResultExt;
 use std::path::{Path, PathBuf};
 use std::error::Error;
@@ -27,18 +27,8 @@ quick_error! {
     }
 }
 
-pub trait CustomDefault {
-    fn default() -> Self;
-}
-pub trait CustomDeserialize : Sized {
-    fn deserialize<D>(de: &mut D) -> Result<Self, D::Error>
-        where D: Deserializer;
-}
-
 pub trait Loader : Deserialize + Sized {
     fn new_from_file(path: &Path) -> Result<Self, ConfigLoadError> {
-        info!( "loading config {}", path.display() );
-
         let mut file = try!( File::open(path).context(path) );
 
         let mut config_toml = String::new();
@@ -61,8 +51,7 @@ pub trait Loader : Deserialize + Sized {
         //XXX is there a better way to do this?
         let mut toml_decoder = Decoder::new( Value::Table( toml.unwrap() ) );
 
-        let config = try!( Deserialize::deserialize( &mut toml_decoder ).context(path) );
-        Ok( config )
+        Ok( try!( Deserialize::deserialize( &mut toml_decoder ).context(path) ) )
     }
 }
 

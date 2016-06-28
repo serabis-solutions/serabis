@@ -1,4 +1,5 @@
-use super::{Loader, CustomDefault, CustomDeserialize};
+use super::{CustomDefault, CustomDeserialize};
+use config_loader::Loader;
 use serde::{Deserialize, Deserializer};
 use std::time::Duration;
 use std::path::PathBuf;
