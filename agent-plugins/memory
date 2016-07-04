@@ -1,9 +1,12 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use JSON::Tiny;
 
 open my $meminfo_fh, "<", "/proc/meminfo";
-my @data;
+my %meminfo;
 
 while ( <$meminfo_fh> ) {
     chomp;
@@ -11,7 +14,8 @@ while ( <$meminfo_fh> ) {
     #change camel to snake case
     $_ =~ s/((?<=[a-z])[A-Z]+)/_\U$1/g;
     my ($key, $value) = $_ =~ /^(.+):\s+(\d+)/;
-    push @data, qq#"\L$key": $value#;
+
+    $meminfo{ lc $key } = $value;
 }
 
 if ( -e "/sys/kernel/mm/ksm/run" ) {
@@ -30,8 +34,8 @@ if ( -e "/sys/kernel/mm/ksm/run" ) {
 
         my $ksm_saved = $pages_sharing - $pages_shared;
 
-        push @data, qq#"ksm_saved": $ksm_saved#;
+        $meminfo{ksm_saved} = $ksm_saved;
     }
 }
-my $joined = join ', ', @data;
-print "{$joined}";
+
+print JSON::Tiny::to_json( \%meminfo );
