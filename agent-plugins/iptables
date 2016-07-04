@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use JSON::Tiny;
+
+my %stats;
+if (
+    -e "/proc/sys/net/netfilter"
+    && -e "/proc/sys/net/netfilter/nf_conntrack_count"
+    && -e "/proc/sys/net/netfilter/nf_conntrack_max"
+) {
+    open my $active_fh, "<", "/proc/sys/net/netfilter/nf_conntrack_count";
+    open my $max_fh, "<", "/proc/sys/net/netfilter/nf_conntrack_max";
+    my $active = <$active_fh>;
+    my $max = <$max_fh>;
+
+    chomp $active;
+    chomp $max;
+
+    $stats{nf_conntrack} = {
+        active  => $active,
+        max     => $max,
+    };
+}
+
+print JSON::Tiny::to_json( \%stats ), "\n";
