@@ -2,17 +2,36 @@
 use strict;
 use warnings;
 
-open my $fh, "<", "/proc/meminfo";
+open my $meminfo_fh, "<", "/proc/meminfo";
 my @data;
 
-while ( <$fh> ) {
+while ( <$meminfo_fh> ) {
     chomp;
 
     #change camel to snake case
     $_ =~ s/((?<=[a-z])[A-Z]+)/_\U$1/g;
     my ($key, $value) = $_ =~ /^(.+):\s+(\d+)/;
-    push @data, "\"\L$key\": $value";
+    push @data, qq#"\L$key": $value#;
 }
 
+if ( -e "/sys/kernel/mm/ksm/run" ) {
+    open my $ksm_run_fh, "<", "/sys/kernel/mm/ksm/run";
+    my $ksm_run = <$ksm_run_fh>;
+    chomp $ksm_run;
+
+    if ( $ksm_run ) {
+        open my $pages_sharing_fh, "<", "/sys/kernel/mm/ksm/pages_sharing";
+        open my $pages_shared_fh, "<", "/sys/kernel/mm/ksm/pages_shared";
+        my $pages_sharing = <$pages_sharing_fh>;
+        my $pages_shared = <$pages_shared_fh>;
+
+        chomp $pages_sharing;
+        chomp $pages_shared;
+
+        my $ksm_saved = $pages_sharing - $pages_shared;
+
+        push @data, qq#"ksm_saved": $ksm_saved#;
+    }
+}
 my $joined = join ', ', @data;
 print "{$joined}";
