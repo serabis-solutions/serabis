@@ -79,13 +79,13 @@ impl Plugin {
     // take ownership of self and move it into the new thread
     pub fn run( self, client: Arc<client::Client> ) -> Result<JoinHandle<Result<(), PluginError>>, PluginError> {
         let thread_handle = thread::Builder::new().name( self.name.to_string() ).spawn(move || {
-            info!("{} splaying for {}s", &self.name, &self.splay.as_secs() );
+            info!("plugin {} splaying for {}s", &self.name, &self.splay.as_secs() );
             thread::sleep( self.splay );
 
             // XXX soemwhere here we should handle any panics
             // or is it in the main thread?
             loop {
-                info!("{} running {:?}", &self.name, &self.config.command);
+                info!("plugin '{}' running {:?}", &self.name, &self.config.command);
 
                 let mut process = try!(
                     Command::new( &self.config.command )
@@ -95,23 +95,32 @@ impl Plugin {
                         .context( self.config.command.as_path() )
                 );
 
-                trace!("{} reading lines", &self.name);
+                trace!("plugin {} reading lines", &self.name);
+
+                //I should do away with pine here, and just read 1 line of stdout/stderr without
+                //spawning another thread
                 let lines = pine::lines(&mut process);
                 for line in lines.iter() {
                     match line {
-                        //wrap this in a try
-                        Line::StdOut(line) => try!( client.report( &self.name, line.trim() ) ),
-                        Line::StdErr(line) => die!("err -> '{}'", line.trim_right() )
+                        Line::StdOut(line) => {try!( client.report( &self.name, line.trim() ) );},
+                        Line::StdErr(line) => warn!("plugin '{}' stderr: {}", &self.name, line.trim_right() ),
                     };
                 }
 
-                trace!( "{} sleeping for {}s", &self.name, &self.config.timeout.as_secs() );
+                //process should have finished running now, so read the exit status so we don't have
+                //defunct proccess
+                let exit_status = try!( process.wait() );
+                if !exit_status.success() {
+                    die!("plugin '{}' {}", &self.name, exit_status );
+                }
+
+                trace!( "plugin {} sleeping for {}s", &self.name, &self.config.timeout.as_secs() );
 
                 thread::sleep( self.config.timeout );
             };
         } );
 
-        //oh yeah, this is to turn it's error into our error
+        //oh yeah, this is to turn thread builder error to our error
         Ok( try!( thread_handle ) )
     }
 }
