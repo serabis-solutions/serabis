@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 my $interfaces = {};
 my $basename_reg = qr|.*/(.+)|;
@@ -23,4 +23,5 @@ for my $interface_dir ( </sys/class/net/*> ) {
         $interfaces->{ $interface }->{ $stat } = $stat_value;
     }
 }
-print JSON::Tiny::to_json( $interfaces ), "\n";
+
+print to_json( $interfaces ), "\n";

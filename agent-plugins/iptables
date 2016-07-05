@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 my %stats;
 if (
@@ -25,4 +25,4 @@ if (
     };
 }
 
-print JSON::Tiny::to_json( \%stats ), "\n";
+print to_json( \%stats ), "\n";

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 open my $meminfo_fh, "<", "/proc/meminfo";
 my %meminfo;
@@ -38,4 +38,4 @@ if ( -e "/sys/kernel/mm/ksm/run" ) {
     }
 }
 
-print JSON::Tiny::to_json( \%meminfo );
+print to_json( \%meminfo );

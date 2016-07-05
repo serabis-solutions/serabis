@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 my %processes;
 my @ps = `ps aux`;
@@ -31,4 +31,4 @@ foreach my $row ( @ps ) {
 
 $processes{count} = scalar keys %{$processes{pids}};
 
-print JSON::Tiny::to_json( \%processes );
+print to_json( \%processes );

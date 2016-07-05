@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 my %state_counts;
 my @ss = `ss`;
@@ -13,4 +13,5 @@ foreach my $row ( @ss ) {
     my $state = [split /\s+/, $row]->[1];
     $state_counts{ $state }++;
 }
-print JSON::Tiny::to_json( \%state_counts );
+
+print to_json( \%state_counts );
