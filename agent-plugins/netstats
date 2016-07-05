@@ -20,7 +20,7 @@ for my $interface_dir ( </sys/class/net/*> ) {
 
         my ( $stat ) = ( $stat_file =~ m/$basename_reg/ );
 
-        $interfaces->{ $interface }->{ $stat } = $stat_value;
+        $interfaces->{ $interface }->{ $stat } = $stat_value +0;
     }
 }
 

@@ -20,8 +20,8 @@ if (
     chomp $max;
 
     $stats{nf_conntrack} = {
-        active  => $active,
-        max     => $max,
+        active  => $active +0,
+        max     => $max +0,
     };
 }
 

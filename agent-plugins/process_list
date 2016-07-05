@@ -24,8 +24,8 @@ foreach my $row ( @ps ) {
     $processes{pids}{ $pid } = {
         user            => $user,
         process_name    => $process_name,
-        'cpu%'          => $cpu,
-        'mem%'          => $mem,
+        'cpu%'          => $cpu +0,
+        'mem%'          => $mem +0,
     };
 }
 
