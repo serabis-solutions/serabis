@@ -1,0 +1,89 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use JSON::Tiny qw/to_json/;
+
+main();
+sub main {
+    #try to run with sudo, but don't get hungup asking for a password
+    # as we can fallback to not having the process info
+    my @netstats = `SUDO_ASKPASS=\$(which false) sudo -A netstat -plntuw`;
+    my $sudo = 0;
+    if ( $? == 0 ) {
+        $sudo = 1;
+    }
+    else {
+        @netstats = `netstat -lntuw`;
+    }
+
+    if ( $? != 0 ) {
+        die "failed to run netstat\n";
+    }
+
+    my %open_ports;
+    shift @netstats; #we don't need the first line
+
+    #ok, we can't use split, because "State" comes before PID/.. and it can
+    # be blank, so things get in the wrong field.
+    my $header = shift @netstats;
+    chomp $header;
+    #these have spaces, we can't count field size if the headers have spaces
+    $header =~ s/Local Address/Local-Address/;
+    $header =~ s/Foreign Address/Foreign-Address/;
+    $header =~ s/Program name/Program-name/;
+
+    my $column_format = calculate_column_widths( $header );
+
+    foreach my $row ( @netstats ) {
+        chomp $row;
+
+        my @unpacked_row = unpack $column_format, $row;
+
+        my $protocol = $unpacked_row[0];
+        my $local_address = $unpacked_row[3];
+
+        $local_address =~ /^(.+):(\d+)$/;
+        my $address = $1;
+        my $port = $2;
+
+        my $state = $unpacked_row[5];
+        $state = undef if $state eq '';
+
+        my %process;
+        if ( $sudo ) {
+            my $process_info = $unpacked_row[6];
+            $process_info =~ m|^(\d+)/(.*)$|;
+
+            $process{process}{pid} = $1;
+            $process{process}{name} = $2;
+        }
+
+        $open_ports{ $address }{ $port } = {
+            protocol => $protocol,
+            state    => $state,
+            %process
+        }
+    }
+
+    print to_json( \%open_ports );
+}
+
+sub calculate_column_widths {
+    my $header = shift;
+
+    my @column_lengths;
+    while ( $header =~ /(\S+\s+)/cg ) {
+        my $start = $-[0];
+        my $end = $+[0] - 1; #because we include the last space
+        my $length = $end - $start;
+
+        push @column_lengths, "A$length";
+    }
+    #for the last field we can slurp everyting
+    $column_lengths[-1] = 'A*';
+
+    my $format = join "x", @column_lengths;
+    return $format
+}
