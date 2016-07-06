@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 open my $meminfo_fh, "<", "/proc/meminfo";
 my %meminfo;
@@ -15,7 +15,7 @@ while ( <$meminfo_fh> ) {
     $_ =~ s/((?<=[a-z])[A-Z]+)/_\U$1/g;
     my ($key, $value) = $_ =~ /^(.+):\s+(\d+)/;
 
-    $meminfo{ lc $key } = $value;
+    $meminfo{ lc $key } = $value +0;
 }
 
 if ( -e "/sys/kernel/mm/ksm/run" ) {
@@ -34,8 +34,8 @@ if ( -e "/sys/kernel/mm/ksm/run" ) {
 
         my $ksm_saved = $pages_sharing - $pages_shared;
 
-        $meminfo{ksm_saved} = $ksm_saved;
+        $meminfo{ksm_saved} = $ksm_saved +0;
     }
 }
 
-print JSON::Tiny::to_json( \%meminfo );
+print to_json( \%meminfo );

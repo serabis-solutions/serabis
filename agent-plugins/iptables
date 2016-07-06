@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin qw/$Bin/;
 use lib "$Bin/lib";
-use JSON::Tiny;
+use JSON::Tiny qw/to_json/;
 
 my %stats;
 if (
@@ -20,9 +20,9 @@ if (
     chomp $max;
 
     $stats{nf_conntrack} = {
-        active  => $active,
-        max     => $max,
+        active  => $active +0,
+        max     => $max +0,
     };
 }
 
-print JSON::Tiny::to_json( \%stats ), "\n";
+print to_json( \%stats ), "\n";
