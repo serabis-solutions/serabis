@@ -24,6 +24,7 @@ const SPLAY_MAX : u64 = 6;
 #[cfg(not(feature = "short_splay"))]
 const SPLAY_MAX : u64 = 60;
 
+//XXX these errors should have some more context, like the plugin name
 quick_error! {
     #[derive(Debug)]
     pub enum PluginError {

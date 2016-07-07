@@ -62,7 +62,7 @@ fn main() {
         match h.join() {
             Err(e) => die!( "failed to join thread {:?}", e ),
             Ok(v) => match v {
-                Err(e) => die!( "plugin failed to run {}", e ),
+                Err(e) => die!( "plugin error - {}", e ),
                 Ok(v) => v,
             }
         };
