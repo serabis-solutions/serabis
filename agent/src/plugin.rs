@@ -2,7 +2,6 @@ use std::fs::read_dir;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
-use std::thread::JoinHandle;
 use rand;
 use rand::distributions::{IndependentSample, Range};
 use std::time::Duration;
@@ -15,6 +14,7 @@ use config::PluginConfig;
 use config_loader::{Loader, ConfigLoadError};
 
 use client;
+use metric;
 
 use quick_error::ResultExt;
 
@@ -28,13 +28,21 @@ const SPLAY_MAX : u64 = 60;
 quick_error! {
     #[derive(Debug)]
     pub enum PluginError {
-        Thread(err: ::std::io::Error) {
+        MetricError( err: metric::MetricError ) {
+            from()
+        }
+        IO(err: ::std::io::Error) {
             from()
         }
         FileContext(filename: PathBuf, err: ::std::io::Error) {
             context(path: &'a Path, err: ::std::io::Error)
                 -> (path.to_path_buf(), err)
             display( "plugin load error [{} - {}]", filename.display(), err )
+        }
+        FileStrContext(filename: String, err: ::std::io::Error) {
+            context(path: &'a str, err: ::std::io::Error)
+                -> (path.to_owned(), err)
+            display( "plugin load error [{} - {}]", filename, err )
         }
         ConfigLoadError(err: ConfigLoadError) {
             from()
@@ -77,52 +85,49 @@ impl Plugin {
         Ok(plugin)
     }
 
-    // take ownership of self and move it into the new thread
-    pub fn run( self, client: Arc<client::Client> ) -> Result<JoinHandle<Result<(), PluginError>>, PluginError> {
-        let thread_handle = thread::Builder::new().name( self.name.to_string() ).spawn(move || {
-            info!("{} splaying for {}s", &self.name, &self.splay.as_secs() );
-            thread::sleep( self.splay );
+    // take ownership of self
+    pub fn run( self, client: Arc<client::Client> ) -> Result<(), PluginError> {
+        info!("{} splaying for {}s", &self.name, &self.splay.as_secs() );
+        thread::sleep( self.splay );
 
-            // XXX soemwhere here we should handle any panics
-            // or is it in the main thread?
-            loop {
-                info!("{} running {:?}", &self.name, &self.config.command);
+        loop {
+            info!("{} running {:?}", &self.name, &self.config.command);
 
-                let mut process = try!(
-                    Command::new( &self.config.command )
-                        .stdout(Stdio::piped())
-                        .stderr(Stdio::piped())
-                        .spawn()
-                        .context( self.config.command.as_path() )
-                );
+            let mut process = try!(
+                Command::new( &self.config.command )
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .context( self.config.command.as_path() )
+            );
 
-                trace!("{} reading lines", &self.name);
+            trace!("{} reading lines", &self.name);
 
-                //I should do away with pine here, and just read 1 line of stdout/stderr without
-                //spawning another thread
-                let lines = pine::lines(&mut process);
-                for line in lines.iter() {
-                    match line {
-                        Line::StdOut(line) => {try!( client.report( &self.name, line.trim() ) );},
-                        Line::StdErr(line) => warn!("{} stderr: {}", &self.name, line.trim_right() ),
-                    };
-                }
+            //I should do away with pine here, and just read 1 line of stdout/stderr without
+            //spawning another thread
+            let lines = pine::lines(&mut process);
+            for line in lines.iter() {
+                match line {
+                    Line::StdOut(line) => {
+                        let metric = try!( metric::Metric::new( &self.name, line.trim() ) );
+                        try!( client.submit_metric( metric ) );
+                    },
+                    Line::StdErr(line) => warn!("{} stderr: {}", &self.name, line.trim_right() ),
+                };
+            }
 
-                //process should have finished running now, so read the exit status so we don't have
-                //defunct proccess
-                let exit_status = try!( process.wait() );
-                if !exit_status.success() {
-                    die!("{} {}", &self.name, exit_status );
-                }
+            //process should have finished running now, so read the exit status so we don't have
+            //defunct proccess
+            let exit_status = try!( process.wait() );
+            if !exit_status.success() {
+                //XXX this shouldn't be a die. it should be Err
+                die!("{} {}", &self.name, exit_status );
+            }
 
-                trace!( "{} sleeping for {}s", &self.name, &self.config.timeout.as_secs() );
+            trace!( "{} sleeping for {}s", &self.name, &self.config.timeout.as_secs() );
 
-                thread::sleep( self.config.timeout );
-            };
-        } );
-
-        //oh yeah, this is to turn thread builder error to our error
-        Ok( try!( thread_handle ) )
+            thread::sleep( self.config.timeout );
+        };
     }
 }
 
