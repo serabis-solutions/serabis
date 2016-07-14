@@ -3,8 +3,8 @@
 #![feature(custom_derive, plugin)]
 #![plugin(serde_macros)]
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
+
 extern crate env_logger;
 extern crate r2d2;
 extern crate r2d2_postgres;
@@ -17,6 +17,7 @@ use serde_json::Value;
 
 mod db;
 mod tables;
+#[macro_use] mod macros;
 
 use config_loader::Loader;
 use std::path::Path;
@@ -47,14 +48,14 @@ struct MetricConsumer {
 
 impl amqp::Consumer for MetricConsumer {
     fn handle_delivery(&mut self, channel: &mut Channel, deliver: protocol::basic::Deliver, headers: protocol::basic::BasicProperties, body: Vec<u8>){
-        //XXX refactor and add some error handling
-        let body = String::from_utf8(body).expect("Unable to read message body");
-        let deserialized_value: Value = serde_json::from_str(body.as_str()).unwrap();
-        let obj = deserialized_value.as_object().unwrap();
-        
+        let obj = match self.get_data_obj_from_msg_body(body) {
+            Some(v) => v,
+            None => return //we've already called error! 
+        };
+
         let components = self.db.tables.conditions.get_agent_condition_components(
-            obj.get("agent").unwrap().as_string().unwrap(), 
-            obj.get("type").unwrap().as_string().unwrap()
+            self.get_obj_value_as_string(&obj, "agent").as_str(),
+            self.get_obj_value_as_string(&obj, "type").as_str(),
         );
 
         if ! components.is_empty() {
@@ -66,6 +67,69 @@ impl amqp::Consumer for MetricConsumer {
 }
 
 impl MetricConsumer {
+    fn get_data_obj_from_msg_body(&self, body: Vec<u8>) -> Option<std::collections::BTreeMap<String, serde_json::Value>> {
+
+        let body_str = match String::from_utf8(body) {
+            Ok(v) => v,
+            Err(e) => {
+                //XXX Should we somehow complain louder abour this?
+                error!("Could not parse message body as utf string {}", e);
+                return None;
+            }
+        };
+
+        let deserialized_value: Value = match serde_json::from_str(body_str.as_str()) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Unable to deserialize JSON message {}", e);
+                return None;
+            }
+        };
+
+        let obj = match deserialized_value.as_object() {
+            Some(v) => v,
+            None => {
+                error!("Unable to load deserialized JSON as an object");
+                return None;
+            }
+        };
+
+        Some(obj.to_owned())
+    }
+    
+    fn get_obj_value_as_string(&self, obj: &std::collections::BTreeMap<std::string::String, serde_json::Value>, key: &str) -> String {
+        match obj.get(key) {
+            Some(v) => match v.as_string() {
+                Some(v) => v.to_string(),
+                None => {
+                    error!("Failed to get {} from queued object", key);
+                    "".to_string()
+                }
+            },
+            None => {
+                error!("Failed to get {} from queued object", key);
+                "".to_string()
+            }
+        }
+    }
+
+
+    fn get_obj_value_as_f64(&self, obj: &std::collections::BTreeMap<std::string::String, serde_json::Value>, key: &str) -> f64 {
+        match obj.get(key) {
+            Some(v) => match v.as_f64() {
+                Some(v) => v,
+                None => {
+                    error!("Failed to get {} from queued object", key);
+                    0.0 //XXX we should raise an error here, not return 0.0
+                }
+            },
+            None => {
+                error!("Failed to get {} from queued object", key);
+                0.0 //XXX we should raise an error here not return 0.0
+            }
+        }
+    }
+
     fn check_condition(&self, metric: &std::collections::BTreeMap<std::string::String, serde_json::Value>, components: Vec<tables::conditions::AgentCondition>, channel: &mut Channel) {
         debug!("METRIC: {:?}", metric);
         let mut changed: bool = true; //set to true then if any haven't changed set to false
@@ -107,8 +171,32 @@ impl MetricConsumer {
         let previous = condition.triggered;
         debug!("PREVIOUS: {:?}", previous);
         debug!("CONDITION: {:?}", condition);
-        let value = metric.get("data").unwrap().as_object().unwrap().get(&condition.trigger_key).unwrap().as_f64().unwrap();
-        let trigger_value = condition.trigger_value.parse().unwrap();
+        
+        let obj = match metric.get("data") {
+            Some(v) => {
+                match v.as_object() {
+                    Some(v) => v,
+                    None => {
+                        error!("Unable to load metric data");
+                        return false;
+                    }
+                }
+            },
+            None => {
+                error!("Unable to load metric data");
+                return false;
+            }
+        };
+
+        let value = self.get_obj_value_as_f64(obj, &condition.trigger_key);
+        let trigger_value = match condition.trigger_value.parse() {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Unable to parse trigger value from condition {}", e);
+                return false;
+            }
+        };
+
         debug!("{} {} {}", value, condition.operator.as_str(), trigger_value);
         let new_value: bool = match condition.operator.as_str() {
             ">=" => (value >= trigger_value),
@@ -127,7 +215,12 @@ fn main() {
     env_logger::init().unwrap();
 
     const CONFIG_PATH: &'static str = "/etc/serapis/condition-checker.toml";
-    let config = Config::new_from_file(Path::new( &CONFIG_PATH )).unwrap();
+
+    info!( "loading agent config {}", &CONFIG_PATH );
+    let config = match Config::new_from_file( Path::new( &CONFIG_PATH ) ) {
+        Ok(v)  => v,
+        Err(e) => die!("{}", e ),
+    };
 
     let db = db::Db::new(&config.postgres_url);
     println!("{:?}", db.tables.accounts.get_accounts());
@@ -149,8 +242,6 @@ fn main() {
     //consumer, queue: &str, consumer_tag: &str, no_local: bool, no_ack: bool, exclusive: bool, nowait: bool, arguments: Table
     info!("Declaring consumers...");
 
-
-
     let metric_consumer = MetricConsumer { db: db };
     let consumer_name = channel.basic_consume( metric_consumer, queue_name, "", false, false, false, false, Table::new());
 
@@ -170,6 +261,7 @@ fn get_channel( config: &Config ) -> Channel {
         .. Default::default()
     }).expect("Can't create session");
 
+    //XXX Should we do something other than die if we can't open a channel?
     let channel = session.open_channel(1).expect("Error openning channel 1");
     info!("Openned channel: {:?}", channel.id);
     channel
