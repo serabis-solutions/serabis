@@ -163,10 +163,10 @@ class Database {
     }
 
 
-    addConditionComponent(condition_id, type, opperator, value) {
+    addConditionComponent(condition_id, type, opperator, value, trigger_key) {
         return this.db.one(
-            'INSERT INTO condition_components (condition_id, type, opperator, trigger_value) VALUES ($1, $2, $3, $4) RETURNING id',
-            [condition_id, type, opperator, value]
+            'INSERT INTO condition_components (condition_id, type, opperator, trigger_value, trigger_key) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [condition_id, type, opperator, value, trigger_key]
         );
     }
 }

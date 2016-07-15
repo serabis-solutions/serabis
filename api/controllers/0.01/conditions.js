@@ -10,7 +10,7 @@ module.exports = function (router) {
         db.addCondition(req.params.accountKey, condition.name, condition.shortname)
         .then(function(data) {
             condition.condition.forEach(function(component) {
-                db.addConditionComponent(data.id, component.type, Object.keys(component.value)[0], component.value[Object.keys(component.value)[0]])
+                db.addConditionComponent(data.id, component.type, Object.keys(component.value)[0], component.value[Object.keys(component.value)[0]], component.key)
                 .then(function(data) {
                     console.log(data);
                 })
