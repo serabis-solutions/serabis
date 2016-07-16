@@ -21,13 +21,13 @@ class Database {
     }
 
 
-    _buildDataPointsQuery(dataPoints, agentId) {
+    _buildMetricsQuery(metrics, agentId) {
         var params = []
         var chunks = []
-        for(var i = 0; i < dataPoints.length; i++) {
-            var dataPoint = dataPoints[i]
+        for(var i = 0; i < metrics.length; i++) {
+            var metric = metrics[i]
             var valueClause = []
-            params.push(dataPoint)
+            params.push(metric)
             valueClause.push('$' + params.length)
             params.push(agentId)
             valueClause.push('$' + params.length)
@@ -35,19 +35,19 @@ class Database {
          }
 
         return {
-            text: 'INSERT INTO data_points (data, agent_key) VALUES ' + chunks.join(', '),
+            text: 'INSERT INTO metrics (data, agent_key) VALUES ' + chunks.join(', '),
             values: params
         } 
     }
 
-    saveDataPoints(dataPoints, accountKey, agentKey) {
+    saveMetrics(metrics, accountKey, agentKey) {
         var model = this;
 
         return this.db.one(
             'SELECT * FROM agents WHERE key = $1 AND account_key = $2',
             [ agentKey, accountKey ])
         .then(function(data) {
-            var q = model._buildDataPointsQuery(dataPoints, agentKey);
+            var q = model._buildMetricsQuery(metrics, agentKey);
             return model.db.none(q.text, q.values );
         })
         .catch(function(err) {
@@ -99,7 +99,7 @@ class Database {
         return cleanKey;
     }
 
-    getAggregateDataPoints(agentKey, dataKey, type, start, end) {
+    getAggregateMetrics(agentKey, dataKey, type, start, end) {
         start = Number(start);
         end = Number(end);
 
@@ -122,7 +122,7 @@ class Database {
         }
 
         return this.db.manyOrNone(
-            'SELECT avg((data->\'data\'$5:raw)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM data_points WHERE agent_key = $1 AND data->>\'type\' = \'$2#\' AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
+            'SELECT avg((data->\'data\'$5:raw)::numeric) AS value, (((data->>\'timestamp\')::int)/$6)*$6 ts, ((data->>\'timestamp\')::int)/$6 g FROM metrics WHERE agent_key = $1 AND data->>\'type\' = \'$2#\' AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 GROUP BY 3 ORDER BY g LIMIT 1000',
             [
                 agentKey,
                 type,
@@ -133,7 +133,7 @@ class Database {
             ]);
     }
 
-    getDataPoints(agentKey, type, start, end) {
+    getMetrics(agentKey, type, start, end) {
         start = Number(start);
         end = Number(end);
 
@@ -145,7 +145,7 @@ class Database {
         }
 
         return this.db.manyOrNone(
-            'SELECT data FROM data_points WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 ORDER BY data->>\'timestamp\' LIMIT 1000',
+            'SELECT data FROM metrics WHERE agent_key = $1 AND data->>\'type\' = $2 AND (data->>\'timestamp\')::integer BETWEEN $3 AND $4 ORDER BY data->>\'timestamp\' LIMIT 1000',
             [
                 agentKey,
                 type,

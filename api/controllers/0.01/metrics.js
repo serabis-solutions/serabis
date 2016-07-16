@@ -14,13 +14,13 @@ module.exports = function (router) {
             items = [items];
         }
 
-        db.saveDataPoints(items, req.params.accountKey, req.params.agentKey)
+        db.saveMetrics(items, req.params.accountKey, req.params.agentKey)
             .then(function(result) {
                 if(result != undefined && result['error']) {
                     console.log(result['error']);
                     res.json ({ err: { code: 1003, msg: result['error'] }});
                 } else {
-                    res.json({ dataPointsSaved: items.length } );
+                    res.json({ metricsSaved: items.length } );
                     items.forEach(function (item) {
                         item['agent'] = req.params.agentKey;
                         item['account'] = req.params.accountKey;
@@ -30,12 +30,12 @@ module.exports = function (router) {
             })
             .catch(function(err) {
                 console.log(err);
-                res.json ({ err: { code: 1001, msg: 'Failed to save data points'}});
+                res.json ({ err: { code: 1001, msg: 'Failed to save metrics'}});
             });
     });
 
     router.get('/:agentKey/:type', function(req, res) {
-        db.getDataPoints(
+        db.getMetrics(
             req.params.agentKey, 
             decode(req.params.type),
             req.query.start,
@@ -46,12 +46,12 @@ module.exports = function (router) {
         })
         .catch(function(err) {
             console.log(err);
-            res.json({err: { code: 1002, msg: 'Failed to load data points'}});
+            res.json({err: { code: 1002, msg: 'Failed to load metrics'}});
         });
     });
 
     router.get('/load/:agentKey/:type/:dataKey', function(req, res) {
-        db.getAggregateDataPoints(
+        db.getAggregateMetrics(
             req.params.agentKey,
             decode(req.params.dataKey),
             decode(req.params.type),
@@ -63,7 +63,7 @@ module.exports = function (router) {
         })
         .catch(function(err) {
             console.log(err);
-            res.json({err: { code: 1002, msg: 'Failed to load data points'}});
+            res.json({err: { code: 1002, msg: 'Failed to load metrics'}});
         });
     });
 };

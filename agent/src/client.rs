@@ -66,7 +66,7 @@ impl Client {
     }
 
     pub fn _post_metric( &self, metric: &metric::Metric ) -> Result<hyper::client::Response, ClientError> {
-        let url = format!( "{}/{}/data_items/{}/{}", self.config.base_url, API_VERSION, self.config.account_key, self.config.agent_key );
+        let url = format!( "{}/{}/metrics/{}/{}", self.config.base_url, API_VERSION, self.config.account_key, self.config.agent_key );
         trace!( "{}: posting to {}", &metric.name, &url );
 
         trace!( "{:?}", &metric );
