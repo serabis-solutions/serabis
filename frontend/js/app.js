@@ -1,5 +1,5 @@
 (function() {
-    var app = angular.module('serapis', ['chart.js']); //.config(function($locationProvider) { $locationProvider.html5Mode(true); }); 
+    var app = angular.module('serabis', ['chart.js']); //.config(function($locationProvider) { $locationProvider.html5Mode(true); }); 
 
     app.directive('agentHeader', function() {
         return {
@@ -84,7 +84,7 @@
     });
 
     function update_graph_data(agent, type, key, scope, http, start, series_index) {
-        http.get('http://dev.serapis:8000/0.01/metrics/load/' + agent.key + '/' + type + '/' + key + '?start=' + start)
+        http.get('http://dev.serabis:8000/0.01/metrics/load/' + agent.key + '/' + type + '/' + key + '?start=' + start)
             .then(function(res) {
                 console.log('MASSIVE SUCCESS2');
                 var data = res.data.data;
