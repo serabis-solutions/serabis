@@ -8,12 +8,12 @@ class Database {
         this.db = pgp({
             host: 'localhost',
             port: 5432,
-            database: 'serapis_dev',
-            user: 'serapis',
+            database: 'serabis_dev',
+            user: 'serabis',
             password: 'reallysecure',
         });
         
-        //'postgres://serapis:reallysecure@localhost:5432/serapis_dev');
+        //'postgres://serabis:reallysecure@localhost:5432/serabis_dev');
 
         if( true || config.debug ) {
             console.log('Connecting to Database');
