@@ -1,7 +1,7 @@
 {
-  "name": "serapis-api",
+  "name": "serabis-api",
   "version": "0.1.0",
-  "description": "Serapis API provider.",
+  "description": "serabis API provider.",
   "author": "Graeme Lawton &lt;graeme@la.wton.email&gt;",
   "main": "index.js",
   "scripts": {

@@ -1,2 +1,2 @@
 timeout = 60
-command = "/etc/serapis/plugins/disk_space"
+command = "/etc/serabis/plugins/disk_space"

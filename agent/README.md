@@ -1,28 +1,28 @@
-# serapis dir
+# serabis dir
 ```bash
-sudo mkdir /etc/serapis
+sudo mkdir /etc/serabis
 ```
 
 ## config
-config needs to be made in `/etc/serapis/agent.toml`
+config needs to be made in `/etc/serabis/agent.toml`
 
 ```toml
 account_key = "$account_key"
 agent_key = "$agent_key"
-base_url = "http://dev.serapis:8000"
+base_url = "http://dev.serabis:8000"
 ```
 
 ## plugins
 
 ```bash
 #if you have agent-plugins checked out
-ln -s /vagrant/agent-plugins /etc/serapis/plugins
+ln -s /vagrant/agent-plugins /etc/serabis/plugins
 
 #or just
-mkdir /etc/serapis/plugins
+mkdir /etc/serabis/plugins
 ```
 
-### /etc/serapis/plugins
+### /etc/serabis/plugins
 
 in here put files, they need to be executable and have no extension
 
@@ -37,7 +37,7 @@ cd $checkout
 
 rustup update nightly
 
-RUST_LOG=serapis_agent=debug cargo run --features "clippy short_splay"
+RUST_LOG=serabis_agent=debug cargo run --features "clippy short_splay"
 
 #if the above fails, you might need to run and try again
 cargo update

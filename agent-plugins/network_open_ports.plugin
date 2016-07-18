@@ -1,2 +1,2 @@
 timeout = 60
-command = "/etc/serapis/plugins/network_open_ports"
+command = "/etc/serabis/plugins/network_open_ports"

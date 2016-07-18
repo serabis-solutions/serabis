@@ -1,5 +1,5 @@
 [root]
-name = "serapis-agent"
+name = "serabis-agent"
 version = "0.1.0"
 dependencies = [
  "clippy 0.0.79 (registry+https://github.com/rust-lang/crates.io-index)",

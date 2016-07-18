@@ -214,7 +214,7 @@ impl MetricConsumer {
 fn main() {
     env_logger::init().unwrap();
 
-    const CONFIG_PATH: &'static str = "/etc/serapis/condition-checker.toml";
+    const CONFIG_PATH: &'static str = "/etc/serabis/condition-checker.toml";
 
     info!( "loading agent config {}", &CONFIG_PATH );
     let config = match Config::new_from_file( Path::new( &CONFIG_PATH ) ) {
