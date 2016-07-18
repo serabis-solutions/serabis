@@ -103,8 +103,6 @@ impl Plugin {
 
             trace!("{} reading lines", &self.name);
 
-            //I should do away with pine here, and just read 1 line of stdout/stderr without
-            //spawning another thread
             let lines = pine::lines(&mut process);
             for line in lines.iter() {
                 match line {
@@ -112,7 +110,7 @@ impl Plugin {
                         let metric = try!( metric::Metric::new( &self.name, line.trim() ) );
                         try!( client.submit_metric( metric ) );
                     },
-                    Line::StdErr(line) => warn!("{} stderr: {}", &self.name, line.trim_right() ),
+                    Line::StdErr(line) => error!("{} stderr: {}", &self.name, line.trim_right() ),
                 };
             }
 
