@@ -34,15 +34,15 @@ use eventual::Async;
 
 use config_loader::Loader;
 
-const CONFIG_PATH: &'static str = "/etc/serapis/agent.toml";
-const PLUGIN_PATH: &'static str = "/etc/serapis/plugins";
+const CONFIG_PATH: &'static str = "/etc/serabis/agent.toml";
+const PLUGIN_PATH: &'static str = "/etc/serabis/plugins";
 
 #[cfg(feature = "client_cache_tmp")]
-pub const CLIENT_CACHE_DIR : &'static str = "/tmp/serapis";
+pub const CLIENT_CACHE_DIR : &'static str = "/tmp/serabis";
 
 //XXX make this work!!!!
 #[cfg(not(feature = "client_cache_tmp"))]
-pub const CLIENT_CACHE_DIR : &'static str = "/var/cache/serapis";
+pub const CLIENT_CACHE_DIR : &'static str = "/var/cache/serabis";
 
 fn main() {
     env_logger::init().unwrap();
