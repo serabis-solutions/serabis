@@ -1,2 +1,2 @@
 timeout = 60
-command = "/etc/serapis/plugins/network_connection_states"
+command = "/etc/serabis/plugins/network_connection_states"
