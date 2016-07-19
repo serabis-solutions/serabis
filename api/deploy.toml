@@ -1,0 +1,28 @@
+deploy_version = "3.0"
+git_remote = "upstream"
+keep_releases = 5
+
+copy_exclude = [
+    ".*",
+    "npm-debug.log",
+    "node_modules",
+]
+
+install_deps = "npm install"
+
+[symlinks]
+    live.json = "config/live.json"
+    node_modules = "node_modules"
+
+[profiles]
+    [profiles.live]
+        server          = "serabis-api1.h1.thisaintnews.com"
+        release_dir     = "/var/lib/serabis/api/live/share/releases"
+        share_dir       = "/var/lib/serabis/api/live/share"
+        current         = "/var/lib/serabis/api/live/current"
+        user            = "serabis"
+        group           = "serabis-shared"
+        [profiles.live.services]
+            serabis-api1.h1.thisaintnews.com = ["serabis-api@live"]
+        [profiles.www.status_url]
+            serabis-api1.h1.thisaintnews.com = "http://127.0.0.1:8080/app_status"

@@ -4,7 +4,7 @@ var config;
 class MQ{
     constructor() {
         this.mq = require('amqplib')
-            .connect('amqp://inserter:reallysecure@dev.serabis/serabis');
+            .connect(config['dsn']);
         console.log('Connecting to RabbitMQ');
 
         var mq = this;
