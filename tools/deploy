@@ -1,0 +1,486 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use 5.010;
+
+use Config::ZOMG;
+use Getopt::Long;
+use Scalar::Util qw/looks_like_number/;
+use List::Util qw/first/;
+use Term::ANSIColor;
+use Path::Tiny;
+use version;
+
+our $VERSION = "3.0";
+
+my @args;
+GetOptions (
+    'force' => \my $force,
+    'verbose|v' => \my $verbose,
+    'notag|n' => \my $notag,
+    '<>'    => sub { push @args, shift },
+) || die "unkown options";
+
+if ( ! scalar @args ) {
+    say "no args\n";
+}
+my ( $action, $profile, $extra ) = @args;
+
+my $path = Path::Tiny->cwd;
+my $user = getpwuid( $< );
+my $project_name = $path->basename;
+my $config = Config::ZOMG->open( name => "deploy", path => $path );
+
+if ( !$config ) {
+    #recurse the tree and (hopefully) find the config
+    while ( !$path->is_rootdir ) {
+        $path = $path->parent;
+
+        $config = Config::ZOMG->open( name => "deploy", path => $path );
+        if ( $config ) {
+            chdir $path;
+            last;
+        }
+    }
+}
+if ( !$config ) {
+    die "couldn't find config!";
+}
+
+if ( exists $config->{deploy_version} ) {
+    if ( version->parse( $VERSION ) < version->parse( $config->{deploy_version} ) ) {
+        die "$project_name needs version $config->{deploy_version} of the deploy script, but you have $VERSION\n";
+    }
+}
+
+my $c_profile;
+
+my @profiles = keys( %{ $config->{profiles} } );
+if ( !$profile ) {
+    die "profile not specified options are '" . join( "' or '", @profiles ) . "'\n";
+}
+elsif ( !grep { $profile eq $_ } @profiles ) {
+    die "'$profile' is invalid, valid options are '" . join( "' or '", @profiles ) . "'\n";
+}
+$c_profile = $config->{profiles}->{ $profile };
+
+#the above are all global because i'm lazy (they're used all over the place)
+main();
+
+sub main {
+    my $dispatch = {
+        deploy   => \&deploy,
+        start    => \&start,
+        stop     => \&stop,
+        restart  => \&restart,
+        rollback => \&rollback,
+    };
+
+    if ( exists $dispatch->{ $action } ) {
+        $dispatch->{ $action }->();
+    }
+    else {
+        say "invalid action '$action'\n";
+    }
+}
+
+sub handle_fail($;$) {
+    my $exit_code = shift >> 8;
+    my $error = shift;
+
+    if ( $exit_code ) {
+        $error //= "failed, code $exit_code";
+        die "$error\n";
+    }
+}
+
+sub deploy {
+    my $release_name = time;
+    my $release_dir = $c_profile->{release_dir} // die "need release_dir in config";
+    my $share_dir = $c_profile->{share_dir} // die "need share_dir in config";
+    my $server = $c_profile->{server} // die "need server in config";
+    my $current = $c_profile->{current} // die "need current in config";
+    my $deploy_dir = "$release_dir/$release_name";
+
+    my $_interpolate_vars = sub {
+        my $source = shift;
+
+        my @matches = ( $source =~ m/\$\{(\w+)\}/g );
+        foreach my $match ( @matches ) {
+            my $value;
+            #these are special
+            if ( $match eq 'profile' ) {
+                $value = $profile;
+            }
+            elsif ( $match eq 'deploy_dir' ) {
+                $value = $deploy_dir;
+            }
+            elsif ( $match eq 'release_name' ) {
+                $value = $release_name;
+            }
+            elsif ( $match eq 'share_dir' ) {
+                $value = $share_dir;
+            }
+            else {
+                die "unknown key $match" if !exists $c_profile->{ $match };
+
+                $value = $c_profile->{ $match };
+                next if ref $value; #ignore arrays + hashes
+            }
+
+            $source =~ s|\$\{$match\}|$value|g;
+        }
+
+        return $source;
+    };
+
+#interpolate variables here, so we fail fast
+    my $create_symlink_commands = '';
+    foreach my $source ( keys %{ $config->{symlinks} || {} } ) {
+        my $destination = $config->{symlinks}->{$source};
+
+        $source = $_interpolate_vars->( $source );
+        if ( $source !~ m|^/| ) {
+            $source = "$share_dir/$source";
+        }
+
+        $create_symlink_commands .= "ln -s $source $deploy_dir/$destination\n";
+    }
+
+    my $create_dirs_commands = '';
+    foreach my $dir ( @{ $config->{dirs} || [] } ) {
+        $dir = $_interpolate_vars->( $dir );
+
+        if ( $dir !~ m|^/| ) {
+            $dir = "$share_dir/$dir";
+        }
+
+        $create_dirs_commands .= "mkdir -p $dir\n";
+    }
+
+#check for dirty dir
+    if ( !$force ) {
+        my $error = "unclean git dir, try running 'git status' and maybe 'git ls-files --other --exclude-standard --directory', or rerun with the --force option\n";
+
+        system(
+            "git",
+            "diff",
+            "--exit-code",
+            "--no-patch",
+        );
+        handle_fail $?, $error;
+
+        system(
+            "git",
+            "diff",
+            "--cached",
+            "--exit-code",
+        );
+        handle_fail $?, $error;
+
+        #this one doesn't do exit code
+        my $result = `git ls-files --other --exclude-standard --directory`;
+        #if there's a result, send 256 so when it's right shifted it will be 1 and error
+        handle_fail( $result ? 256 : 0, $error );
+    }
+
+#git tag
+    if ( !$notag ) {
+        my $git_remote = $config->{git_remote} || "origin";
+
+        info( undef, "tagging release $release_name" );
+        system(
+            "git",
+            "tag",
+            "release/$profile/$release_name"
+        );
+        handle_fail $?;
+
+        system(
+            "git",
+            "push",
+            $verbose ? () : '-q',
+            $git_remote,
+            "release/$profile/$release_name"
+        );
+        handle_fail $?;
+    }
+
+#make dir
+    _execute_remote_commands(
+        commands => "mkdir $deploy_dir",
+        servers  => $server,
+        no_sudo  => 1,
+        info     => 'making release dir',
+    );
+
+    my @rsync_excludes = map { "--exclude=$_" } @{$config->{copy_exclude}};
+#rsync last deploy to new deploy to save upload
+    _execute_remote_commands(
+        commands => "[ -e $current ] && rsync -aW" . (defined($verbose) && 'v') . " $current/* $deploy_dir/ " . join(" ", @rsync_excludes) . ' 2>&1',
+        servers  => $server,
+        no_sudo  => 1,
+        info     => "copying last deploy",
+    );
+
+#rsync
+    info( $server, "rsyncing new files" );
+    system(
+        "rsync",
+        "-az",
+        $verbose ? '-v' : (),
+        "--del",
+        "--chmod=u+rw,g+rw,o+r",
+        ".",
+        "$server:$deploy_dir",
+        @rsync_excludes,
+    );
+    handle_fail $?;
+
+#chown
+    _execute_remote_commands(
+        commands => "chown -R $c_profile->{user}:$c_profile->{group} '$deploy_dir'; chmod g+w -R '$deploy_dir'",
+        servers  => $server,
+        info     => "fixing permissions",
+        root     => 1,
+    );
+
+#setup dirs
+    if ( $create_dirs_commands ) {
+        _execute_remote_commands(
+            commands => $create_dirs_commands,
+            servers  => $server,
+            info     => "creating dirs",
+        );
+    }
+
+#setup symlinks
+    if ( $create_symlink_commands ) {
+        _execute_remote_commands(
+            commands => $create_symlink_commands,
+            servers  => $server,
+            info     => "setting up symlinks",
+        );
+    }
+
+#install dependencies
+    if ( $config->{install_deps} ) {
+        _execute_remote_commands(
+            commands => "cd '$deploy_dir'; $config->{install_deps}",
+            servers  => $server,
+            info     => "installing dependencies",
+        );
+    }
+
+#delete old releases
+    _execute_remote_commands(
+        commands => qq#perl -MFile::Path\\ 'remove_tree' -E 'chdir "$release_dir"; \@f = <*>; \@d = sort grep { -d \$_ && ! -l \$_ } \@f; delete \@d[-$config->{keep_releases}..-1]; remove_tree "$release_dir/\$_" for \@d';#,
+        servers  => $server,
+        info     => "removing old releases"
+    );
+
+##create release version file
+    _execute_remote_commands(
+        commands => "echo $release_name > $deploy_dir/release_version",
+        servers  => $server,
+        info     => "creating release version file",
+    );
+
+    foreach my $server ( keys %{$c_profile->{services}} ) {
+        ##create the per-server current deploy
+        _stop( $server );
+        _execute_remote_commands(
+            commands => "rm -rf $current; cp -a $deploy_dir $current",
+            servers  => $server,
+            info     => "copying $release_name to $current",
+            root     => 1,
+        );
+        _start( $server );
+        _wait_for_online( $server );
+    }
+}
+
+sub start {
+    foreach my $server ( keys %{$c_profile->{services}} ) {
+        _start( $server );
+    }
+}
+sub _start {
+    my $server = shift;
+
+    my $services = $c_profile->{services}->{$server};
+
+    foreach ( @{$services} ) {
+        _execute_remote_commands(
+            commands => "systemctl start $_",
+            root     => 1,
+            servers  => $server,
+            info     => "starting $_"
+        );
+    }
+}
+
+sub stop {
+    foreach my $server ( keys %{$c_profile->{services}} ) {
+        _stop( $server );
+    }
+}
+sub _stop {
+    my $server = shift;
+
+    my $services = $c_profile->{services}->{$server};
+
+    foreach ( @{$services} ) {
+        _execute_remote_commands(
+            commands => "systemctl stop $_",
+            root     => 1,
+            servers  => $server,
+            info     => "stopping $_"
+        );
+    }
+}
+
+sub _wait_for_online {
+    my $server = shift;
+
+    if ( my $status_url = $c_profile->{status_url}->{$server} ) {
+        my $commands = << "END";
+COUNT=1
+while [ 1 ]; do
+    STATUS=\$(curl -k --connect-timeout 3 -m 3 -s -o /dev/null -w "%{http_code}" "${status_url}")
+    if ! grep -q 200 <<< \$STATUS; then
+        ((COUNT++))
+        if [ \$COUNT -gt 20 ]; then
+            echo -e "\\e[31mserver failed to start, exiting\\e[0m"
+            exit 33
+        fi
+        echo -e "waiting..."
+        sleep 3
+    else
+       echo -e "..server started"
+       break
+    fi
+done
+END
+
+        _execute_remote_commands(
+            commands => $commands,
+            root     => 1,
+            servers  => $server,
+            info     => "waiting for online"
+        );
+    }
+}
+sub restart {
+    foreach my $server ( keys %{$c_profile->{services}} ) {
+        my $services = $c_profile->{services}->{$server};
+
+        _stop( $server );
+        _start( $server );
+        _wait_for_online( $server );
+    }
+}
+
+sub rollback {
+    my $release_dir = $c_profile->{release_dir};
+    my $rollback = 2;
+    my $current = $c_profile->{current} // die "need current in config";
+
+    if ( $extra && looks_like_number( $extra ) ) {
+        if ( $extra > $config->{keep_releases} ) {
+            die "can't rollback more than $config->{keep_releases} releases\n";
+        }
+        $rollback = $extra;
+    }
+    info( undef, "rolling back $rollback releases" );
+
+    my $commands = <<END;
+perl -MFile::Path\\ 'remove_tree' -E 'chdir "$release_dir"; \@f = <*>; \@d = sort grep { -d \$_ && ! -l \$_ } \@f; die "not enough releases to rollback $rollback\\n" if !\$d[-$rollback]; remove_tree "$current"; `cp -a "$release_dir/\$d[-$rollback]" "$current"`';
+END
+
+    foreach my $server ( keys %{$c_profile->{services}} ) {
+        _stop( $server );
+        _execute_remote_commands(
+            commands => $commands,
+            servers  => $server,
+            info     => "rolling back",
+        );
+        _start( $server );
+        _wait_for_online( $server );
+    }
+}
+
+sub _execute_remote_commands {
+    my %args = @_;
+
+    my $commands = $args{commands} // die "no command\n";
+    my $root = $args{root};
+    my $servers = $args{servers};
+    my $info = $args{info};
+    my $no_sudo = $args{no_sudo};
+
+    if ( defined $servers && !ref $servers ) {
+        $servers = [$servers];
+    }
+    $servers //= $c_profile->{servers};
+
+    my $user = '';
+    if ( !$root ) {
+        $user = "-u $c_profile->{user}";
+    }
+
+    foreach my $server ( @{$servers} ) {
+        my $shell;
+        if ( !$no_sudo ) {
+            $shell = "'sudo $user -s'";
+        }
+        else {
+            $shell = 'bash';
+        }
+        info( $server, $info ) if $info;
+
+        say "ssh $server $shell" if $verbose;
+
+        my $child_pid = open( my $ssh_connection, "|-", "ssh $server $shell") || die "can't exec ssh";
+        if ( $child_pid ) {
+            #parent
+            my $bash_profile = "~$c_profile->{user}/.profile";
+            say "[ -e $bash_profile ] && source $bash_profile\n" if $verbose;
+            print $ssh_connection "[ -e $bash_profile ] && source $bash_profile\n";
+
+            my $command_to_run = '';
+            foreach my $command ( split /\n/, $commands ) {
+                if ( $command ) {
+                    $command_to_run .= "$command\n";
+                    say $command if $verbose;
+                }
+            }
+
+            if ( $command_to_run ) {
+                print $ssh_connection "echo -ne \\\e[32m\n";
+                print $ssh_connection "$command_to_run\n";
+                print $ssh_connection "echo -ne \\\e[0m\n";
+            }
+
+            #does waitpid and all that on the child
+            close $ssh_connection;
+
+            my $exit_code = $? >> 8;
+            die "remote execution failed, exit code $exit_code" if $exit_code;
+        }
+    }
+}
+
+sub info {
+    my ( $host, $info ) = @_;
+
+    if ( $host ) {
+        print color('white') . "[$host]" . color('reset') . " ";
+    }
+    if ( $info ) {
+        say color('blue') . "$info" . color('reset');
+    }
+    else {
+        print "\n";
+    }
+}

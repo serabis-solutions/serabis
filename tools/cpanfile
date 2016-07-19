@@ -1,0 +1,9 @@
+requires 'Cwd';
+requires 'Config::ZOMG';
+requires 'Getopt::Long';
+requires 'Scalar::Util';
+requires 'List::Util';
+requires 'Term::ANSIColor';
+requires 'Path::Tiny';
+requires 'Config::Any::TOML';
+requires 'version';
