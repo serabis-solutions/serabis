@@ -52,22 +52,25 @@ quick_error! {
             from()
             display( "{}", err )
         }
+        CommandNotFound( err: String ) {
+            from()
+            display( "{}", err )
+        }
     }
 }
 
 pub struct Plugin {
     pub name : String,
-    path     : PathBuf,
     splay    : Duration,
     config   : PluginConfig
 }
 
 impl Plugin {
-    pub fn new( name: &str, path: &Path ) -> Result<Plugin, PluginError> {
+    pub fn new( name: &str, plugin_config_path: &Path ) -> Result<Plugin, PluginError> {
         info!( "loading {}", &name );
 
-        info!( "loading {} config", path.display() );
-        let config = try!( PluginConfig::new_from_file( path ) );
+        info!( "loading {} config", plugin_config_path.display() );
+        let mut config = try!( PluginConfig::new_from_file( plugin_config_path ) );
         trace!( "{:?}", &config );
 
         let mut rng = rand::thread_rng();
@@ -75,14 +78,58 @@ impl Plugin {
         let splay = splay_range.ind_sample( &mut rng );
         let splay_duration = Duration::from_secs( splay );
 
+
+        if config.command.is_relative() {
+            trace!( "{} - command is relative", &name );
+
+            let found_command_path = try!( Self::find_command( &name, &config.command, &plugin_config_path ) );
+            config.command = found_command_path;
+        }
+
         let plugin = Plugin {
             name    : name.to_owned(),
-            path    : path.to_path_buf(),
             splay   : splay_duration,
             config  : config,
         };
 
         Ok(plugin)
+    }
+
+    fn find_command( name: &str, command: &PathBuf, plugin_config_path: &Path )
+        -> Result<PathBuf, PluginError>
+    {
+        let mut current_path = Some( plugin_config_path.to_path_buf() );
+
+        while let Some( working_path ) = current_path {
+            let parent_dir = working_path.parent();
+            if let Some(parent_dir) = parent_dir {
+                let new_path = &parent_dir.join( &command );
+                if new_path.exists() {
+                    trace!(
+                        "{} - found {}/{}",
+                        &name,
+                        &parent_dir.display(),
+                        &command.display()
+                    );
+
+                    return Ok( new_path.to_path_buf() );
+                }
+            }
+            else {
+                trace!("no parent dir. odd");
+                let err = format!(
+                    "{} - looking for {} failed. reached fs root. giving up",
+                    &name,
+                    &command.display()
+                );
+                return Err( PluginError::CommandNotFound( err ) );
+            }
+
+            current_path = working_path.read_link().ok();
+        }
+
+        let err = format!( "{} - looking for {}. not found. giving up", &name, &command.display() );
+        Err( PluginError::CommandNotFound( err ) )
     }
 
     // take ownership of self

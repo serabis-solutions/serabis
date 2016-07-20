@@ -15,16 +15,13 @@ base_url = "http://dev.serabis:8000"
 ## plugins
 
 ```bash
-#if you have agent-plugins checked out
-ln -s /vagrant/agent-plugins /etc/serabis/plugins
-
-#or just
 mkdir /etc/serabis/plugins
+ln -s ~/workspace/serabis/agent-plugins/*.plugin /etc/serabis/plugins
 ```
 
 ### /etc/serabis/plugins
 
-in here put files, they need to be executable and have no extension
+in here put files, they're toml files with the extension `.plugin`
 
 plugins need to output valid json
 
@@ -37,7 +34,7 @@ cd $checkout
 
 rustup update nightly
 
-RUST_LOG=serabis_agent=debug cargo run --features "clippy short_splay"
+RUST_LOG=serabis_agent=debug cargo run --features "clippy short_splay client_cache_tmp"
 
 #if the above fails, you might need to run and try again
 cargo update
