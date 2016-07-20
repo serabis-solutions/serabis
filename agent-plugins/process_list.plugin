@@ -1,2 +1,2 @@
 timeout = 60
-command = "/etc/serabis/plugins/process_list"
+command = "process_list"
