@@ -16,6 +16,11 @@ options = {
          * Add any additional config setup or overrides here. `config` is an initialized
          * `confit` (https://github.com/krakenjs/confit/) configuration object.
          */
+
+        //this is dumb. can it be automated?
+        require('./models/mq.js').init( config.get('model/mq') );
+        require('./models/database.js').init( config.get('model/database') );
+
         next(null, config);
     }
 };

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+ENVIRONMENT=$1
+case "$ENVIRONMENT" in 
+    live)
+        PORT=8000
+        WORKERS=5
+        NODE_ENV=live
+        ;;
+    *)
+        echo "invalid environment $ENVIRONMENT" >&2
+        exit 127
+        ;;
+esac
+
+export NODE_ENV PORT WORKERS
+exec node cluster.js

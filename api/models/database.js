@@ -5,15 +5,7 @@ class Database {
     constructor() {
         var pgp = require('pg-promise')({});
         this._value = require('pg-promise/lib/formatting').as.value;
-        this.db = pgp({
-            host: 'localhost',
-            port: 5432,
-            database: 'serabis_dev',
-            user: 'serabis',
-            password: 'reallysecure',
-        });
-        
-        //'postgres://serabis:reallysecure@localhost:5432/serabis_dev');
+        this.db = pgp(config['connection_info']);
 
         if( true || config.debug ) {
             console.log('Connecting to Database');
