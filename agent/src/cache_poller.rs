@@ -31,7 +31,7 @@ impl CachePoller {
     }
 
     fn send_metrics( &self ) -> Result<(), PluginError> {
-        info!("looking for cached metrics");
+        trace!("looking for cached metrics");
 
         let files = try!( fs::read_dir( ::CLIENT_CACHE_DIR ).context( ::CLIENT_CACHE_DIR ) );
 

@@ -87,7 +87,7 @@ fn main() {
         //this is because .poll takes ownership of the future, and we need to put it back in the
         //queue
         let mut new_futures : Vec<eventual::Future<_, _>> = Vec::with_capacity( plugin_count );
-        info!("thread error checker running");
+        trace!("thread error checker running");
         for future in futures {
             match future.poll() {
                 Ok(r)   => match r {
