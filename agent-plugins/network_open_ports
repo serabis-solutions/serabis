@@ -34,7 +34,7 @@ sub main {
     $header =~ s/Foreign Address/Foreign-Address/;
     $header =~ s/Program name/Program-name/;
 
-    my $column_format = calculate_column_widths( $header );
+    my $column_format = $sudo ? "A5xA6xA6xA23xA23xA11xA*" : "A5xA6xA6xA23xA23xA*";
 
     foreach my $row ( @netstats ) {
         chomp $row;
@@ -68,22 +68,4 @@ sub main {
     }
 
     print to_json( \%open_ports );
-}
-
-sub calculate_column_widths {
-    my $header = shift;
-
-    my @column_lengths;
-    while ( $header =~ /(\S+\s+)/cg ) {
-        my $start = $-[0];
-        my $end = $+[0] - 1; #because we include the last space
-        my $length = $end - $start;
-
-        push @column_lengths, "A$length";
-    }
-    #for the last field we can slurp everyting
-    $column_lengths[-1] = 'A*';
-
-    my $format = join "x", @column_lengths;
-    return $format
 }
