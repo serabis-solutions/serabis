@@ -1,5 +1,5 @@
 use hyper;
-use hyper::header::{Headers, ContentType};
+use hyper::header::{Headers, ContentType, Authorization, Basic};
 use std::sync::Arc;
 use std::time::Duration;
 use config;
@@ -31,8 +31,9 @@ quick_error! {
 }
 
 pub struct Client {
-    config  : Arc<config::AgentConfig>,
-    hyper   : Arc<hyper::Client>,
+    config      : Arc<config::AgentConfig>,
+    hyper       : Arc<hyper::Client>,
+    auth_header : Option<Authorization<Basic>>,
 }
 
 impl Client {
@@ -41,9 +42,24 @@ impl Client {
         client.set_read_timeout( Some( Duration::from_secs( 10 ) ) );
         client.set_write_timeout( Some( Duration::from_secs( 10 ) ) );
 
+        let auth_header = if config.htauth_user.is_some() {
+            Some(
+                Authorization(
+                    Basic {
+                       username: config.htauth_user.clone().unwrap(),
+                       password: config.htauth_pass.clone(),
+                    }
+                )
+            )
+        }
+        else {
+            None
+        };
+
         Client {
-            config  : config,
-            hyper   : Arc::new(client),
+            config      : config,
+            hyper       : Arc::new(client),
+            auth_header : auth_header,
         }
     }
 
@@ -73,6 +89,10 @@ impl Client {
 
         let mut headers = Headers::new();
         headers.set( ContentType( mime!(Application/Json; Charset=Utf8) ) );
+        if self.auth_header.is_some() {
+            headers.set( self.auth_header.clone().unwrap() );
+        }
+
 
         // there's no way to make this connection timeout sooner if the server isn't availble
         //   https://stackoverflow.com/questions/30022084/how-do-i-set-connect-timeout-on-tcpstream
