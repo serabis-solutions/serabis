@@ -151,7 +151,7 @@ impl MetricConsumer {
             self.update_check_trigger(agent_condition_id, );
             debug!("****ALERT TRIGGERED****");
             channel.basic_publish(
-                "exchange", "alert.new", true, false, self.get_basic_properties(), format!("{{agent_condition_id: {} }}", agent_condition_id).to_string().into_bytes()
+                "exchange", "alert.new", true, false, self.get_basic_properties(), format!("{{\"agent_condition_id\": {} }}", agent_condition_id).to_string().into_bytes()
             ).expect("Failed publishing");
         }
     
