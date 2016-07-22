@@ -4,6 +4,7 @@
 #![plugin(serde_macros)]
 
 #[macro_use] extern crate log;
+#[macro_use] extern crate quick_error;
 
 extern crate env_logger;
 extern crate r2d2;
@@ -17,6 +18,8 @@ use serde_json::Value;
 
 mod db;
 mod tables;
+mod error;
+
 #[macro_use] mod macros;
 
 use config_loader::Loader;
@@ -222,7 +225,11 @@ fn main() {
         Err(e) => die!("{}", e ),
     };
 
-    let db = db::Db::new(&config.postgres_url);
+    let db = match db::Db::new(&config.postgres_url) {
+        Ok(v) => v,
+        Err(e) => die!("{}", e),
+    };
+
     println!("{:?}", db.tables.accounts.get_accounts());
     println!("{:?}", db.tables.agents.get_agents());
 
