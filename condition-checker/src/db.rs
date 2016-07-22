@@ -1,6 +1,7 @@
 use r2d2_postgres::{SslMode, PostgresConnectionManager};
 use r2d2::{Pool, Config};
 use tables::*;
+use error::CCError;
 
 //Add table definitions here
 pub struct Tables {
@@ -15,19 +16,19 @@ pub struct Db {
 }
 
 impl Db {
-    pub fn new(uri: &str) -> Db {
+    pub fn new(uri: &str) -> Result<Db, CCError> {
         let config = Config::default();
-        let manager = PostgresConnectionManager::new(uri, SslMode::None).unwrap();
-        let pool = Pool::new(config, manager).unwrap();
+        let manager = try!(PostgresConnectionManager::new(uri, SslMode::None));
+        let pool = try!(Pool::new(config, manager));
 
-        Db{
+        Ok(Db{
             tables: Tables{
                 accounts: Accounts::new( pool.clone() ),
                 agents: Agents::new( pool.clone() ),
                 conditions: Conditions::new( pool.clone() ),
             },
             pool: pool,
-        }
+        })
     }
 }
 
