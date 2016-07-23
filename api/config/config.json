@@ -15,13 +15,6 @@
             "module": {
                 "arguments": [{ "directory": "path:./controllers" }]
             }
-        },
-        "cors": {
-            "enabled": true,
-            "priority": 119,
-            "module": {
-                "name": "path:./middlewares/cors" //"path" is a shortstop-handler
-            }
         }
     }
 }
