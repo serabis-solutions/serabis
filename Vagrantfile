@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             v.memory = 2048
     end
 
-    config.vm.hostname = "dev.serabis"
+    config.vm.hostname = "dev.serabis.com"
     config.ssh.forward_agent = true
     config.hostmanager.enabled = true
     config.hostmanager.manage_host = true
