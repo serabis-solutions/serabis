@@ -1,5 +1,11 @@
 'use strict';
 
+//longer stack traces in dev
+var node_env = process.env.NODE_ENV;
+if ( ( node_env === undefined ) || node_env === 'development' ) {
+    Error.stackTraceLimit = Infinity;
+}
+
 var express = require('express');
 var kraken = require('kraken-js');
 

@@ -9,7 +9,7 @@ config needs to be made in `/etc/serabis/agent.toml`
 ```toml
 account_key = "$account_key"
 agent_key = "$agent_key"
-base_url = "http://dev.serabis:8000"
+base_url = "http://dev.serabis.com:8000"
 ```
 
 ## plugins

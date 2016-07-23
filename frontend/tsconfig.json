@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "ES5",
+        "outFile": "js/app.js",
+        "rootDir": "src",
+        "noImplicitAny": true,
+        "noEmitOnError": true,
+        "noImplicitReturns": true
+    }
+}

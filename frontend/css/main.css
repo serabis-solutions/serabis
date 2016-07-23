@@ -1,0 +1,26 @@
+form.controls {
+    padding:10px;
+    width:360px;
+}
+.left {
+    float:left;
+    margin-right:10px;
+}
+#playarea {
+    clear:left;
+}
+input[type=text] {
+    width:350px;
+}
+label {
+    display:block;
+}
+.graph_container {
+    max-width:800px;
+    max-height:800px;
+    border:1px solid #f00;
+}
+.graph_close {
+    float:right;
+    cursor: pointer;
+}
