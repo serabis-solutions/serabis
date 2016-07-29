@@ -86,10 +86,19 @@ impl AlertConsumer {
                 .from("alerts@serabis.com")
                 .subject(format!("SERABIS ALERT: {}", contact.hostname).as_str())
                 .body(self.get_email_body(contact).as_str())
-                .build().unwrap();
+                .build();
 
-            let result = self.mailer.send(email);
-            debug!("Email Send Result: {:?}", result);
+            match email {
+                Ok(v) => {
+                    match self.mailer.send(v) {
+                        Ok(v) => debug!("Email Send Result: {:?}", v),
+                        Err(e) => info!("Failed to send email alert {:?}", e)
+                    }
+                },
+                Err(e) => {
+                    info!("Failed to generate email: {}", e);
+                }
+            }
         }
     }
 
@@ -165,11 +174,17 @@ fn main() {
         Err(e) => die!("{}", e),
     };
 
-    let mut mailer = 
-        SmtpTransportBuilder::new((config.mail.host.as_str(), config.mail.port)).unwrap()
-        .credentials(&config.mail.username, &config.mail.password)
-        .connection_reuse(true)
-        .build();
+    let mailer = match SmtpTransportBuilder::new((
+            config.mail.host.as_str(),
+            config.mail.port)
+        ) {
+            Ok(v) => {
+                v.credentials(&config.mail.username, &config.mail.password)
+                .connection_reuse(true)
+                .build()
+            },
+            Err(e) => panic!("Failed to initialise mailer: {:?}", e)
+    };
 
     let mut channel = get_channel(&config);
     let queue_name = "alerter-consumer";
