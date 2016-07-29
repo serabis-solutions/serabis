@@ -161,6 +161,13 @@ class Database {
             [condition_id, type, opperator, value, trigger_key]
         );
     }
+
+    addContact(account_key, fname, lname, email) {
+      return this.db.one(
+        'INSERT INTO contacts (account_id, fname, lname, email) VALUES ((SELECT id FROM accounts WHERE key = $1), $2, $3, $4) RETURNING id',
+        [account_key, fname, lname, email]
+      );
+    }
 }
 
 module.exports.init = function(modelConfig) {
