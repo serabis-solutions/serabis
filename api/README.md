@@ -29,3 +29,8 @@ curl -i -X POST -H "Content-Type: application/json" -d '[{"type":"system.uptime"
 ```
 curl -i -X POST -H "Content-Type: application/json" -d '{ "name": "5min Load above 3 and 1min > 4", "level": 3, "condition": [{ "type": "load", "key": "5min", "value": { ">=": "3" } }, { "type": "load", "key": "1min", "value": { ">=": "4" } }] } ' http://dev.serabis:8000/0.01/conditions/new/4cfd9fd6-3fcf-4aad-8183-67a21c338b22
 ```
+
+### Add condition to agent
+```
+curl -i -X POST -H "Content-Type: application/json" -d '{ "condition": 1 }' http://dev.serabis:8000/0.01/conditions/add_to_agent/5c7fce74-0e46-420f-8576-0c4bd785f095
+```
