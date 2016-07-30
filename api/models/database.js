@@ -162,6 +162,13 @@ class Database {
         );
     }
 
+    addAgentCondition(agent_key, condition_id) {
+        return this.db.one(
+            'INSERT INTO agent_conditions (agent_id, condition_id) VALUES ((SELECT id FROM agents where key = $1), $2) RETURNING id',
+            [agent_key, condition_id]
+        );
+    }
+
     addContact(account_key, fname, lname, email) {
       return this.db.one(
         'INSERT INTO contacts (account_id, fname, lname, email) VALUES ((SELECT id FROM accounts WHERE key = $1), $2, $3, $4) RETURNING id',

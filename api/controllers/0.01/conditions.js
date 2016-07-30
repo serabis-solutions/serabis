@@ -26,4 +26,17 @@ module.exports = function (router) {
         });
     });
 
+    router.post('/add_to_agent/:agent_id', function(req, res) {
+      var data = req.body;
+      db.addAgentCondition(req.params.agent_id, data.condition)
+        .then(function(data) {
+          console.log(data);
+          res.json({success: 1});
+        })
+        .catch(function(err) {
+          console.log(err);
+          res.json({err: {code: 4002, msg: 'Failed to add condition to agent'}});
+        });
+    });
+
 };
