@@ -1,10 +1,7 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-    config.vm.box = "debian/jessie64"
-
-    #versions newer than this use rsync to share the vagrant folder. not cool
-    config.vm.box_version = '8.2.1'
+    config.vm.box = "bento/debian-8.5"
 
     config.vm.provider "virtualbox" do |v|
             v.memory = 2048
