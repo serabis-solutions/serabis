@@ -1,83 +1,50 @@
 <!DOCTYPE html>
-<html ng-app="serabis" lang="en">
+<html>
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        
-        <title>serabis</title>
-        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
-        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-            <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-        <![endif]--> 
-        <link rel="stylesheet" type="text/css" href="css/app.css" />  
-        <link rel="stylesheet" href="bower_components/angular-chart.js/dist/angular-chart.css">
+        <link rel="stylesheet" media="all" href="/css/main.css" />
+        <link rel="stylesheet" href="/js/dist/jsTree/themes/default/style.min.css" />
     </head>
     <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Serabis</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Profile</a></li>
-            <li><a href="#">Help</a></li>
-          </ul>
-          <form class="navbar-form navbar-right">
-            <input type="text" class="form-control" placeholder="Search...">
-          </form>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-          <ul class="nav nav-sidebar">
-            <li class="active"><a href="#">Overview <span class="sr-only">(current)</span></a></li>
-            <li><a href="#">Reports</a></li>
-            <li><a href="#">Analytics</a></li>
-            <li><a href="#">Export</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a href="">Nav item</a></li>
-            <li><a href="">Nav item again</a></li>
-            <li><a href="">One more nav</a></li>
-            <li><a href="">Another nav item</a></li>
-            <li><a href="">More navigation</a></li>
-          </ul>
-          <ul class="nav nav-sidebar">
-            <li><a href="">Nav item again</a></li>
-            <li><a href="">One more nav</a></li>
-            <li><a href="">Another nav item</a></li>
-          </ul>
-        </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-            <agent-header></agent-header>
-            <graph></graph>
-            <graph-netstats></graph-netstats>
-            <graph-disk-space></graph-disk-space>
-        </div>
-      </div>
-    </div>
-
-        <script type="text/javascript" src="bower_components/angular/angular.min.js" ></script>
-        <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js" ></script>
-        <script type="text/javascript" src="bower_components/Chart.js/Chart.min.js" ></script>
-        <script type="text/javascript" src="bower_components/angular-chart.js/dist/angular-chart.js"></script>
-        <script type="text/javascript" src="js/app.js" ></script>
-   </body>
+        <script src="/js/dist/jquery-3.1.0.min.js"></script>
+        <script src="/js/dist/jsTree/jstree.min.js"></script>
+        <script src="/js/dist/Chart.bundle.min.js"></script>
+        <script src="/js/dist/almond.min.js"></script>
+        <script src="/js/app.js"></script>
+        <script>
+            (function () {
+                require('gui');
+            }());
+        </script>
+        <form class="controls left" id="account_form">
+            <fieldset>
+                <label>base url</label><input type="text" id="base_url" value="http://api.serabis.com" />
+                <label>username</label><input type="text" id="username" value="serabis" />
+                <label>password</label><input type="text" id="password" value="serapis" />
+                <label>account key</label><input type="text" id="account_key" value="5f30888d-964b-4abf-bf21-e001338a66aa" />
+                <input id="load_account" type="button" value="load account"/>
+            </fieldset>
+        </form>
+        <form class="controls left " id="agent_form">
+            <fieldset disabled>
+                <label>device</label><select id="device"><option>Please load account</option></select>
+                <label>metric type</label><select id="metric_type"><option>Please choose device</option></select>
+                <label>selector</label><div id="selector"></div>
+                <label>age</label><select id="age">
+                    <option value="181">5 mins</option>
+                    <option value="1801">30 mins</option>
+                    <option value="3601">1 hour</option>
+                    <option value="43201">12 hours</option>
+                    <option value="86401">1 day</option>
+                    <option value="604801">7 days</option>
+                    <option value="1209601" selected="selected">14 days</option>
+                    <option value="2419201">28 days</option>
+                </select>
+                <label>delta</label><input type="checkbox" id="delta" checked="checked" />
+                <label>divide by</label><input type="text" id="divider" value="1024" />
+                <input id="go" type="button" value="GO!"/>
+            </fieldset>
+        </form>
+        <div id="playarea"></div>
+    </body>
 </html>
-

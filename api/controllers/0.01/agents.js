@@ -23,4 +23,17 @@ module.exports = function (router) {
     function generateKey(details) {
         return uuid.v4();
     }
+
+    router.get('/:accountKey', function(req, res) {
+        db.getAgentList(
+            req.params.accountKey
+        )
+        .then(function(data) {
+            res.json(data);
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.json({err: { code: 2003, msg: 'Failed to load agent list'}});
+        });
+    });
 };

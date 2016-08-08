@@ -8,6 +8,7 @@ module.exports = function (router) {
     var db = dbModel.new();
     var mq = mqModel.new();
 
+    //new metric
     router.post('/:accountKey/:agentKey', function(req, res) {
         var items = req.body;
         if(!Array.isArray(items)) {
@@ -34,6 +35,38 @@ module.exports = function (router) {
             });
     });
 
+    //gets sample of keys from metric.type
+    router.get('/sample/:agentKey/:type', function(req, res) {
+        db.getMetricsLimited(
+            req.params.agentKey,
+            req.params.type,
+            20
+        )
+        .then(function(data) {
+            res.json(data);
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.json({err: { code: 1004, msg: 'Failed to load metrics'}});
+        });
+    });
+
+    //has to be above the more generic match below
+    //gets list of metric types for agent
+    router.get('/types/:agentKey', function(req, res) {
+        db.getMetricTypes(
+            req.params.agentKey
+        )
+        .then(function(data) {
+            res.json(data);
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.json({err: { code: 1003, msg: 'Failed to load metric types'}});
+        });
+    });
+
+    //gets all metrics of :type for :agent
     router.get('/:agentKey/:type', function(req, res) {
         db.getMetrics(
             req.params.agentKey, 
@@ -50,16 +83,28 @@ module.exports = function (router) {
         });
     });
 
-    router.get('/load/:agentKey/:type/:dataKey', function(req, res) {
+    //gets metrics of :type and [?key]
+    router.get('/load/:agentKey/:type', function(req, res) {
+        let key = req.query.key;
+
+        if ( !(key instanceof Array) ) {
+            key = [key]
+        }
+
+        let keys = [];
+        key.forEach( (key) => {
+            keys.push( decode(key) );
+        } );
+
         db.getAggregateMetrics(
             req.params.agentKey,
-            decode(req.params.dataKey),
+            keys,
             decode(req.params.type),
             req.query.start,
             req.query.end
         )
         .then(function(data) {
-            res.json({data: data});
+            res.json(data);
         })
         .catch(function(err) {
             console.log(err);

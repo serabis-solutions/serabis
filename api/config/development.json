@@ -1,6 +1,6 @@
 {
     "model/mq": {
-        "dsn": "amqp://inserter:reallysecure@dev.serabis/serabis"
+        "dsn": "amqp://inserter:reallysecure@dev.serabis.com/serabis"
     },
     "model/database": {
         "connection_info": {
@@ -13,6 +13,9 @@
     },
 
     "middleware": {
+        "logger" : {
+            "enabled": true
+        },
 
         "devtools": {
             "enabled": true,
