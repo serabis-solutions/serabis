@@ -4,7 +4,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.box = "bento/debian-8.5"
 
     config.vm.provider "virtualbox" do |v|
-            v.memory = 2048
+        v.memory = 2048
+        v.customize ["modifyvm", :id, "--pagefusion", "on"]
+        v.linked_clone = true
     end
 
     config.vm.hostname = "dev.serabis.com"
